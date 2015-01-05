@@ -1,0 +1,6 @@
+{
+	"name": "Athlon1600/php-proxy",
+	"require": {
+		"symfony/http-foundation": "~2.6"
+	}
+}
