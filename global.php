@@ -5,15 +5,19 @@ use Symfony\Component\HttpFoundation\Request;
 function prepare_from_globals($url){
 
 	$method = $_SERVER['REQUEST_METHOD'];
-	$request = Request::create($url, $method, $method == 'GET' ? $_GET : $_POST, $_COOKIE, $_FILES, $_SERVER);
+	$request = Request::create($url, $method, $method == 'POST' ? $_POST : array(), $_COOKIE, $_FILES, $_SERVER);
 
 	return $request;	
 }
 
+// strip away extra parameters text/html; charset=UTF-8
+function clean_content_type($content_type){
+	return preg_replace('@;.*@', '', $content_type);
+}
+
 function is_html($content_type){
 
-	// in case of text/html; charset=UTF-8
-	$content_type = preg_replace('@;.*@', '', $content_type);
+	$content_type = clean_content_type($content_type);
 	
 	$text = array(
 		//'text/cmd',

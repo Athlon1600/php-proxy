@@ -3,6 +3,9 @@
 // all possible options will be stored
 $config = array();
 
+
+$config['log.file_types'] = array('text/html');
+
 /*
 // for scripts spread out to multiple servers - on error let's redirect back to main site along with error message
 //$config['error_redirect'] = "http://www.google.com/?error={error_type}&message={error_msg}";

@@ -52,12 +52,13 @@ $request = prepare_from_globals($url);
 $proxy = new Proxy($request);
 
 
+
 $proxy->addPlugin(new HeaderRewritePlugin());
 //$proxy->addPlugin(new CookiePlugin()); does not work at the moment
 $proxy->addPlugin(new ProxifyPlugin());
 $proxy->addPlugin(new YoutubePlugin());
 $proxy->addPlugin(new DailyMotionPlugin());
-//$proxy->addPlugin(new LogPlugin());
+$proxy->addPlugin(new LogPlugin());
 
 
 try {
