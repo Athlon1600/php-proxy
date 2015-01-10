@@ -1,5 +1,37 @@
 <?php
 
+use Symfony\Component\HttpFoundation\Request;
+
+function prepare_from_globals($url){
+
+	$method = $_SERVER['REQUEST_METHOD'];
+	$request = Request::create($url, $method, $method == 'GET' ? $_GET : $_POST, $_COOKIE, $_FILES, $_SERVER);
+
+	return $request;	
+}
+
+function is_html($content_type){
+
+	// in case of text/html; charset=UTF-8
+	$content_type = preg_replace('@;.*@', '', $content_type);
+	
+	$text = array(
+		//'text/cmd',
+		//'text/css',
+		//'text/csv',
+		//'text/example',
+		'text/html'
+		//'text/javascript',
+		//'text/plain',
+		//'text/rtf',
+		//'text/vcard',
+		//'text/vnd.abc',
+		//'text/xml'
+	);
+
+	return in_array($content_type, $text);
+}
+
 function base64_url_encode($input){
 	// = at the end is just padding to make the length of the str divisible by 4
 	return rtrim(strtr(base64_encode($input), '+/', '-_'), '=');
@@ -87,26 +119,6 @@ function proxify_url($url){
 	return SCRIPT_BASE.'?q='.encrypt_url($url);
 }
 
-function replace_placeholders($str, $callback = null){
-
-	global $tpl_vars;
-
-	preg_match_all('@{(.+?)}@s', $str, $matches, PREG_SET_ORDER);
-	
-	foreach($matches as $match){
-	
-		$var_val = $tpl_vars[$match[1]];
-		
-		if(function_exists($callback)){
-			$var_val = @call_user_func($callback, $var_val);
-		}
-		
-		$str = str_replace($match[0], $var_val, $str);
-	}
-	
-	return $str;
-}
-
 function vid_player($url, $width, $height){
 
 	$video_url = proxify_url($url); // proxify!
@@ -124,38 +136,6 @@ function vid_player($url, $width, $height){
 }
 
 
-use Symfony\Component\HttpFoundation\Request;
-
-function request_set_url(Request $request, $url){
-
-	$components = parse_url($url);
-	
-	$server = $_SERVER;
-	
-	// unset all in the beginning
-	unset($server['HTTPS']);
-	unset($server['HTTP_HOST']);
-	unset($server['SERVER_NAME']);
-	unset($server['REQUEST_URI']);
-	unset($server['QUERY_STRING']);
-	
-	if(isset($components['scheme']) && $components['scheme'] == 'https'){
-		$server['HTTPS'] = 'on';
-	}
-	
-	$server['HTTP_HOST'] = $components['host'];
-	$server['SERVER_NAME'] = $components['host'];
-	
-	if(isset($components['path'])){
-		$server['REQUEST_URI'] = $components['path'];
-	}
-	
-	if(isset($components['query'])){
-		$server['QUERY_STRING'] = $components['query'];
-	}
-	
-	return $request->duplicate(null, null, null, null, null, $server);
-}
 
 function rel2abs($rel, $base)
 {

@@ -3,7 +3,7 @@
 class ProxifyPlugin extends AbstractPlugin {
 
 	function html_href($matches){
-		return 'href="'.proxify_url($matches[1]).'"';
+		return 'href=\''.proxify_url($matches[1]).'\'';
 	}
 
 	function html_src($matches){
@@ -33,10 +33,15 @@ class ProxifyPlugin extends AbstractPlugin {
 		
 		$str = $response->getContent();
 		
+		//var_dump("before: ".strlen($str));
+		
+		
 		// html
 		$str = preg_replace_callback('@href=["|\'](.+?)["|\']@im', array($this, 'html_href'), $str);
 		$str = preg_replace_callback('@src=["|\'](.+?)["|\']@i', array($this, 'html_src'), $str);
 		$str = preg_replace_callback('@<form[^>]*action=["|\'](.+?)["|\'][^>]*>@i', array($this, 'html_action'), $str);
+		
+		//var_dump("after: ".strlen($str));
 		
 		$response->setContent($str);
 		

@@ -14,6 +14,8 @@ class Proxy {
 	private $dispatcher;
 	
 	// stream: Set to true to stream a response body rather than download it all up front
+	private $output_buffer_types = array('text/html', 'text/plain', 'text/css', 'text/javascript', 'application/x-javascript', 'application/javascript');
+	private $output_buffer = '';
 	private $stream = false;
 	
 	public function __construct(Request $request){
@@ -23,15 +25,6 @@ class Proxy {
 		
 		$this->dispatcher = new EventDispatcher();
 	}
-
-	private $mime_types = array(
-		'text/html' => 'html',
-		'text/plain' => 'html',
-		'text/css' => 'css',
-		'text/javascript' => 'js',
-		'application/x-javascript' => 'js',
-		'application/javascript' => 'js'
-	);
 	
 	private function header_callback($ch, $headers){
 	
@@ -56,7 +49,7 @@ class Proxy {
 			
 			// end of headers - last line is always empty
 			
-			// what content type are we dealing with here?
+			// what content type are we dealing with here? can be empty
 			$content_type = $this->response->headers->get('content-type');
 			
 			// extract just the part that we want
@@ -64,7 +57,7 @@ class Proxy {
 			$content_type = substr($content_type, 0, $pos ? $pos : 999);
 			
 			// output immediately as it's being streamed or buffer everything until the end?
-			if(!isset($this->mime_types[$content_type])){
+			if($content_type && !in_array($content_type, $this->output_buffer_types)){
 
 				$this->stream = true;
 				$this->response->sendHeaders();
@@ -74,8 +67,6 @@ class Proxy {
 		return strlen($headers);
 	}
 	
-	private $output = '';
-	
 	private function write_callback($ch, $str){
 	
 		$len = strlen($str);
@@ -84,7 +75,7 @@ class Proxy {
 			echo $str;
 			flush();
 		} else {
-			$this->output .= $str;
+			$this->output_buffer .= $str;
 		}
 		
 		return $len;
@@ -124,9 +115,8 @@ class Proxy {
 		// modify request further
 		$this->dispatcher->dispatch('request.before', $this->generateEvent());
 
-		
 		$headers = $this->request->headers->all();
-
+		
 		$real = array();
 		
 		foreach($headers as $name => $value){
@@ -154,7 +144,7 @@ class Proxy {
 			// we have output waiting in the buffer?
 			if(!$this->stream){
 			
-				$this->response->setContent($this->output);
+				$this->response->setContent($this->output_buffer);
 				
 				$this->dispatcher->dispatch('response.body', $this->generateEvent());
 				

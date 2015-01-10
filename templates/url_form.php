@@ -49,6 +49,3 @@ html body {
 <script type="text/javascript">
 	smart_select(document.getElementsByName("url")[0]);
 </script>
-
-
-<? echo $content; ?>
