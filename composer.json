@@ -1,5 +1,5 @@
 {
-	"name": "Athlon1600/php-proxy",
+	"name": "athlon1600/php-proxy",
 	"require": {
 		"symfony/http-foundation": "~2.6",
 		"symfony/event-dispatcher": "~2.6"
