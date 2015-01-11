@@ -1,5 +1,7 @@
 {
 	"name": "athlon1600/php-proxy",
+	"type": "project",
+	"homepage": "https://www.php-proxy.com/",
 	"require": {
 		"symfony/http-foundation": "~2.6",
 		"symfony/event-dispatcher": "~2.6"
