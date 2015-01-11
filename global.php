@@ -146,7 +146,11 @@ function rel2abs($rel, $base)
 	if (strpos($rel, "//") === 0) {
 		return "http:" . $rel;
 	}
-
+	
+	if($rel == ""){
+		return "";
+	}
+	
 	/* return if  already absolute URL */
 	if (parse_url($rel, PHP_URL_SCHEME) != '') return $rel;
 	/* queries and  anchors */

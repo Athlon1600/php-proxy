@@ -9,7 +9,13 @@ class LogPlugin extends AbstractPlugin {
 		
 		global $config;
 		
+		$enabled = $config->get("log.enabled");
 		$file_types = $config->get("log.file_types");
+		
+		// logging disabled? don't bother
+		if(!$enabled){
+			return;
+		}
 		
 		$vars = array(
 			'ip' => $request->getClientIp(),

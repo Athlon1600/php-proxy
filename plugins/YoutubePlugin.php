@@ -45,11 +45,26 @@ class YoutubePlugin extends AbstractPlugin {
 		return false;
 	}
 	
+	private function find_first_available($links, $itags){
+	
+		foreach($itags as $itag){
+		
+			if(isset($links[$itag])){
+				return $links[$itag];
+			}
+		}
+		
+		return false;
+	}
+	
 	public function onBeforeResponse(FilterEvent $event){
 	
 		$response = $event->getResponse();
-		
 		$output = $response->getContent();
+		
+		if(!preg_match("@youtube.com/watch@", $event->getRequest()->getUri())){
+			return;
+		}
 		
 		// do this on all youtube pages
 		//$output = preg_replace('@masthead-positioner">@', 'masthead-positioner" style="position:static;">', $output, 1); 
@@ -57,20 +72,38 @@ class YoutubePlugin extends AbstractPlugin {
 		
 		$links = $this->get_youtube_links($output);
 		
-		// these are flv links the only ones supported by flowplayer
-		$itags = array(5, 34, 35);
+		// the only ones supported by flowplayer
+		$flv_itags = array(5, 34, 35);
+		$mp4_itags = array(18, 22, 37, 38, 82, 84);
+		$webm_itags = array(43, 44, 46, 100, 102);
 		
-		foreach($itags as $tag){
 		
-			if(isset($links[$tag])) {
-				$vid_url = $links[$tag];
-				
-				$output = preg_replace('#<div id="player-api"([^>]*)>.*<div class="clear"#s', 
-				'<div id="player-api"$1>'.vid_player($vid_url, 640, 390).'</div><div class="clear"', $output, 1);
+		global $config;
 		
-				break;
-			}
+		$html5 = $config->get("youtube.html5_player");
+		
+		
+		if($html5){
+		
+			// find mp4
+			$mp4_url = $this->find_first_available($links, $mp4_itags);
+			$mp4_url = proxify_url($mp4_url);
+			
+			$player = '<video width="100%" height="100%" controls autoplay>
+							<source src="'.$mp4_url.'" type="video/mp4">
+						Your browser does not support the video tag.
+					</video>';
+			
+		} else {
+		
+			$vid_url = $this->find_first_available($links, $flv_itags);
+			$player = vid_player($vid_url, 640, 390);
 		}
+		
+		$output = str_replace('<div id="theater-background" class="player-height"></div>', '', $output);
+
+		$output = preg_replace('#<div id="player-api"([^>]*)>.*<div class="clear"#s', 
+		'<div id="player-api"$1>'.$player.'</div><div class="clear"', $output, 1);
 		
 		$response->setContent($output);
 	}
