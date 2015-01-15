@@ -1,13 +1,22 @@
 <?php
 
+use Symfony\Component\HttpFoundation\Cookie;
+
 class CookiePlugin extends AbstractPlugin {
 
+	const COOKIE_PREFIX = 'pc_';
+	
 	public function onBeforeRequest(FilterEvent $event){
 	
-		// load and send appropriate cookies to our destination
-		$http_cookie = @$_SERVER['HTTP_COOKIE'];
+		$request = $event->getRequest();
 		
-		if(preg_match_all('@dc_(.+?)__(.+?)=([^;]+)@', $http_cookie, $matches, PREG_SET_ORDER)){
+		// rewrite the headers sent from the user
+		$http_cookie = $request->headers->get("cookie");
+		
+		// remove
+		$request->headers->remove("cookie");
+
+		if(preg_match_all('@pc_(.+?)__(.+?)=([^;]+)@', $http_cookie, $matches, PREG_SET_ORDER)){
 		
 			foreach($matches as $match){
 			
@@ -17,17 +26,72 @@ class CookiePlugin extends AbstractPlugin {
 				$data['value'] = $match[3];
 				$data['domain'] = $domain;
 				
-				$event->getRequest()->headers->set($data['name'], $data['value'], false);
+				$request->headers->set('cookie', $data['name'].'='.$data['value'], false);
 			}
 		}
 	}
 	
-	private function parse($header){
+	// rewrite set-cookie header to something else
+	public function onBeforeHeaders(FilterEvent $event){
 	
-		$data = array();
+		// save cookies received from destination server
+		$request = $event->getRequest();
+		$response = $event->getResponse();
+		
+		// does our response send any cookies?
+		$cookies = $response->headers->get('set-cookie', null, false);
+		
+		if($cookies){
+		
+			// remove set-cookie header and reconstruct it differently
+			$response->headers->remove('set-cookie');
+			
+			// loop through each set-cookie
+			foreach($cookies as $cookie_str){
+			
+				try {
+				
+					// valid instance of Cookie will hopefully be returned
+					$cookie = $this->parse_cookie($cookie_str, $request->getUri());
+					
+					
+					
+					
+					// construct our own cookie!!!!
+					$name = 'pc_'.str_replace(".", "_", $cookie->getDomain()).'__'.$cookie->getName();
+					
+					$proxy_cookie = new Cookie($name, $cookie->getValue(), $cookie->getExpiresTime());
+					
+					
+					
+					
+					// pass our new cookie to the client!!!
+					$response->headers->setCookie($proxy_cookie);
+				
+				} catch (InvalidArgumentException $ex){
+					//var_dump($ex->getMessage());
+				}
+			}
+		}	
+	}
+	
+	// adapted from browserkit
+	private function parse_cookie($cookie_str, $url){
+	
+		$host = parse_url($url, PHP_URL_HOST);
+		
+		$data = array(
+			'name' => '',
+			'value' => '',
+			'expire' => 0,
+			'path' => '/',
+			'domain' => $host,
+			'secure' => false,
+			'httpOnly' => true
+		);
 		
 		// there should be at least one name=value pair
-		$components = array_filter(array_map('trim', explode(';', $header)));
+		$components = array_filter(array_map('trim', explode(';', $cookie_str)));
 		
 		foreach($components as $index => $comp){
 		
@@ -36,6 +100,7 @@ class CookiePlugin extends AbstractPlugin {
 			
 			if(count($parts) == 1){
 			
+				// secure; HttpOnly; == 1
 				$data[$key] = true;
 				
 			} else {
@@ -51,32 +116,9 @@ class CookiePlugin extends AbstractPlugin {
 			}
 		}
 		
-		return $data;
-	}
-	
-	public function onBeforeHeaders(FilterEvent $event){
-	
-		// save cookies received from destination server
-		$request = $event->getRequest();
-		$response = $event->getResponse();
+		extract($data);
 		
-		$set_cookie = $response->headers->get('set-cookie', 0, false);
-		
-		foreach($set_cookie as $c){
-		
-			$data = $this->parse($c);
-			
-			// domain
-			$domain = $request->getHost();
-			
-			// store all cookies on user's browser
-			@$cookie_name = 'dc_'.str_replace(".", "_", $domain).'__'.$data['name'];
-			
-			@setcookie($cookie_name, $data['value'], time() + 60*60);
-		}
-		
-		// cookies were already set - discard the rest
-		$response->headers->remove('set-cookie');
+		return new Cookie($name, $value, $expire, $path, $domain, $secure, $httpOnly);
 	}
 
 }

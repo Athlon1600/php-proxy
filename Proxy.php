@@ -30,7 +30,11 @@ class Proxy {
 	
 		$parts = explode(":", $headers, 2);
 		
-		if(count($parts) == 2){
+		if(preg_match('/HTTP\/1.\d+ (\d+)/', $headers, $matches)){
+		
+			$this->response->setStatusCode($matches[1]);
+		
+		} else if(count($parts) == 2){
 			
 			$name = strtolower($parts[0]);
 			$value = trim($parts[1]);
@@ -38,23 +42,16 @@ class Proxy {
 			// set it up!
 			$this->response->headers->set($name, $value, false);
 			
-		} else if(preg_match('/HTTP\/1.\d+ (\d+)/', $headers, $matches)){
-		
-			$this->response->setStatusCode($matches[1]);
-			
 		} else {
+		
+			// end of headers - last line is always empty
 		
 			// do this
 			$this->dispatcher->dispatch('response.headers', $this->generateEvent());
 			
-			// end of headers - last line is always empty
-			
 			// what content type are we dealing with here? can be empty
 			$content_type = $this->response->headers->get('content-type');
-			
-			// extract just the part that we want
-			$pos = strpos($content_type, ';');
-			$content_type = substr($content_type, 0, $pos ? $pos : 999);
+			$content_type = clean_content_type($content_type);
 			
 			// output immediately as it's being streamed or buffer everything until the end?
 			if($content_type && !in_array($content_type, $this->output_buffer_types)){
@@ -120,7 +117,11 @@ class Proxy {
 		$real = array();
 		
 		foreach($headers as $name => $value){
-			$value = $value[0];
+		
+			if(is_array($value)){
+				$value = implode("; ", $value);
+			}
+			
 			$real[] = $name.': '.$value;
 		}
 		

@@ -25,15 +25,23 @@ class ProxifyPlugin extends AbstractPlugin {
 		return $result;
 	}
 
+	// request response headers content_type
 	public function onBeforeResponse(FilterEvent $event){
 	
 		$response = $event->getResponse();
+	
 	
 		//$str = proxify_css($str);
 		
 		$str = $response->getContent();
 		
 		//var_dump("before: ".strlen($str));
+		
+		
+		// let's remove all frames??
+		
+		
+		$str = preg_replace('@<iframe[^>]+>.*?<\\/iframe>@is', '', $str);
 		
 		
 		// html

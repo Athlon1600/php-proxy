@@ -54,11 +54,14 @@ $proxy = new Proxy($request);
 
 
 $proxy->addPlugin(new HeaderRewritePlugin());
-//$proxy->addPlugin(new CookiePlugin()); does not work at the moment
+$proxy->addPlugin(new CookiePlugin());
 $proxy->addPlugin(new ProxifyPlugin());
 $proxy->addPlugin(new YoutubePlugin());
 $proxy->addPlugin(new DailyMotionPlugin());
 $proxy->addPlugin(new LogPlugin());
+$proxy->addPlugin(new XVideosPlugin());
+$proxy->addPlugin(new XHamsterPlugin());
+$proxy->addPlugin(new RedTubePlugin());
 
 
 try {
