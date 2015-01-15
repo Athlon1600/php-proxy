@@ -117,6 +117,10 @@ function time_ms(){
 	return round(microtime(true) * 1000);
 }
 
+function contains($haystack, $needle){
+	return strpos($haystack, $needle) !== false;
+}
+
 function proxify_url($url){
 	$url = htmlspecialchars_decode($url);
 	$url = rel2abs($url, URL); // URL is the base

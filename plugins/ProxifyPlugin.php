@@ -2,8 +2,19 @@
 
 class ProxifyPlugin extends AbstractPlugin {
 
+	function css_url($matches){
+	
+		$url = trim($matches[1]);
+		
+		if(stripos($url, 'data:') === 0){
+			return $matches[0];
+		}
+		
+		return 'url(\''.proxify_url($url).'\')';
+	}
+
 	function html_href($matches){
-		return 'href=\''.proxify_url($matches[1]).'\'';
+		return 'href="'.proxify_url($matches[1]).'"';
 	}
 
 	function html_src($matches){
@@ -30,30 +41,22 @@ class ProxifyPlugin extends AbstractPlugin {
 	
 		$response = $event->getResponse();
 	
-	
-		//$str = proxify_css($str);
-		
 		$str = $response->getContent();
 		
-		//var_dump("before: ".strlen($str));
-		
-		
 		// let's remove all frames??
-		
-		
 		$str = preg_replace('@<iframe[^>]+>.*?<\\/iframe>@is', '', $str);
 		
+		// css
+		$str = preg_replace_callback('@url\s*\((?:\'|"|)(.*?)(?:\'|"|)\)@im', array($this, 'css_url'), $str);
 		
 		// html
-		$str = preg_replace_callback('@href=["|\'](.+?)["|\']@im', array($this, 'html_href'), $str);
+		$str = preg_replace_callback('@href=["|\']([^"]+)["|\']@im', array($this, 'html_href'), $str);
 		$str = preg_replace_callback('@src=["|\'](.+?)["|\']@i', array($this, 'html_src'), $str);
 		$str = preg_replace_callback('@<form[^>]*action=["|\'](.+?)["|\'][^>]*>@i', array($this, 'html_action'), $str);
 		
-		//var_dump("after: ".strlen($str));
+		
 		
 		$response->setContent($str);
-		
-		//return $response;
 	}
 
 

@@ -26,7 +26,12 @@ class CookiePlugin extends AbstractPlugin {
 				$data['value'] = $match[3];
 				$data['domain'] = $domain;
 				
-				$request->headers->set('cookie', $data['name'].'='.$data['value'], false);
+				$host = parse_url($request->getUri(), PHP_URL_HOST);
+				
+				// does this cookie belong to this domain?
+				if(strpos($host, $domain) !== false){
+					$request->headers->set('cookie', $data['name'].'='.$data['value'], false);
+				}
 			}
 		}
 	}
@@ -54,16 +59,9 @@ class CookiePlugin extends AbstractPlugin {
 					// valid instance of Cookie will hopefully be returned
 					$cookie = $this->parse_cookie($cookie_str, $request->getUri());
 					
-					
-					
-					
 					// construct our own cookie!!!!
 					$name = 'pc_'.str_replace(".", "_", $cookie->getDomain()).'__'.$cookie->getName();
-					
 					$proxy_cookie = new Cookie($name, $cookie->getValue(), $cookie->getExpiresTime());
-					
-					
-					
 					
 					// pass our new cookie to the client!!!
 					$response->headers->setCookie($proxy_cookie);

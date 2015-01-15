@@ -102,7 +102,6 @@ class Proxy {
 			
 			// we will take care of redirects
 			CURLOPT_FOLLOWLOCATION	=> false,
-			CURLOPT_MAXREDIRS		=> 5,
 			CURLOPT_AUTOREFERER		=> false
 		);
 		
