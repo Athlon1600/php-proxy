@@ -27,6 +27,17 @@ html body {
 	line-height:45px;
 }
 
+#top_form input[name=url] {
+	width: 550px;
+	height: 20px;
+	padding: 5px;
+	font: 13px "Helvetica Neue",Helvetica,Arial,sans-serif;
+	border: 0px none;
+	background: none repeat scroll 0% 0% #FFF;
+}
+
+
+
 </style>
 
 <script src="//www.php-proxy.com/assets/url_form.js"></script>
@@ -37,7 +48,7 @@ html body {
 	
 		<form method="post" action="<?=$script_base;?>" target="_top" style="margin:0; padding:0;">
 			<input type="button" value="Home" onclick="window.location.href='<?=$script_base;?>'">
-			<input type="text" style="width:550px;" name="url" value="<?=$url;?>" autocomplete="off">
+			<input type="text" name="url" value="<?=$url;?>" autocomplete="off">
 			<input type="hidden" name="form" value="1">
 			<input type="submit" value="Go">
 		</form>

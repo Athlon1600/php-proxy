@@ -4,7 +4,7 @@ class HeaderRewritePlugin extends AbstractPlugin {
 
 	function onBeforeRequest(FilterEvent $event){
 		
-		// we accept plain text only
+		// tell website that we only accept plain text
 		$event->getRequest()->headers->remove('accept-encoding');
 	}
 	

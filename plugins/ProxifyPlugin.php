@@ -14,7 +14,14 @@ class ProxifyPlugin extends AbstractPlugin {
 	}
 
 	function html_href($matches){
-		return 'href="'.proxify_url($matches[1]).'"';
+		
+		$url = $matches[1];
+		
+		if(stripos($url, "javascript:") === 0){
+			return $matches[0];
+		}
+	
+		return 'href="'.proxify_url($url).'"';
 	}
 
 	function html_src($matches){
@@ -50,8 +57,8 @@ class ProxifyPlugin extends AbstractPlugin {
 		$str = preg_replace_callback('@url\s*\((?:\'|"|)(.*?)(?:\'|"|)\)@im', array($this, 'css_url'), $str);
 		
 		// html
-		$str = preg_replace_callback('@href=["|\']([^"]+)["|\']@im', array($this, 'html_href'), $str);
-		$str = preg_replace_callback('@src=["|\'](.+?)["|\']@i', array($this, 'html_src'), $str);
+		$str = preg_replace_callback('@href=["|\']([^"\']+)["|\']@im', array($this, 'html_href'), $str);
+		$str = preg_replace_callback('@src=["|\']([^"\']+)["|\']@i', array($this, 'html_src'), $str);
 		$str = preg_replace_callback('@<form[^>]*action=["|\'](.+?)["|\'][^>]*>@i', array($this, 'html_action'), $str);
 		
 		
