@@ -105,6 +105,13 @@ class Proxy {
 			CURLOPT_AUTOREFERER		=> false
 		);
 		
+		
+		global $config;
+		
+		if($config->has("outgoing_ip")){
+			$options[CURLOPT_INTERFACE] = $config->get("outgoing_ip");
+		}
+		
 		$options[CURLOPT_HEADERFUNCTION] = array($this, 'header_callback');
 		$options[CURLOPT_WRITEFUNCTION] = array($this, 'write_callback');
 		

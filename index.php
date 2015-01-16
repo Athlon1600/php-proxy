@@ -17,7 +17,7 @@ require("FilterEvent.php");
 
 // load all plugins at once
 foreach (glob("plugins/*.php") as $filename){
-    require($filename);
+	require($filename);
 }
 
 // constants to be used throughout
@@ -68,7 +68,7 @@ try {
 
 	$response = $proxy->execute($url);
 	
-	// are we streaming?
+	// if headers were already sent, then this must be a streaming response
 	if(!headers_sent()){
 	
 		// send headers first!
@@ -101,11 +101,24 @@ try {
 	
 } catch (Exception $ex){
 
-	echo render_template("index", array(
-		'url' => $url,
-		'script_base' => SCRIPT_BASE,
-		'error_msg' => $ex->getMessage()
-	));
+	if($config->has("error_redirect")){
+	
+		$url = render_string($config->get("error_redirect"), array(
+			'error_msg' => rawurlencode($ex->getMessage())
+		));
+		
+		header("HTTP/1.1 302 Found");
+		header("Location: {$url}");
+		
+	} else {
+	
+		echo render_template("index", array(
+			'url' => $url,
+			'script_base' => SCRIPT_BASE,
+			'error_msg' => $ex->getMessage()
+		));
+		
+	}
 }
 
 
