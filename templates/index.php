@@ -57,10 +57,10 @@ html body {
 	<?php if(isset($error_msg)){ ?>
 	
 	<div id="error">
-		<p><? echo $error_msg; ?></p>
+		<p><?php echo $error_msg; ?></p>
 	</div>
 	
-	<? } ?>
+	<?php } ?>
 	
 	<div id="frm">
 	
