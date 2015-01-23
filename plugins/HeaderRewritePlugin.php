@@ -20,9 +20,14 @@ class HeaderRewritePlugin extends AbstractPlugin {
 			$response->headers->set('location', SCRIPT_BASE.'?q='.encrypt_url($loc));
 		}
 		
+		$remove = array("x-frame-options", "x-xss-protection",  "x-content-type-options");
+		
+		foreach($remove as $r){
+			$response->headers->remove($r);
+		}
+		
 		// forward only specified headers:
 		$forward_only = array('content-type');
-		
 		
 		// remove all caching headers!
 		$response->headers->remove('age');
@@ -34,8 +39,8 @@ class HeaderRewritePlugin extends AbstractPlugin {
 		$response->headers->set("pragma", "no-cache");
 		
 		// plain text only
-		//$response->headers->remove('transfer-encoding');
-		//$response->headers->remove('content-encoding');
+		$response->headers->remove('transfer-encoding');
+		$response->headers->remove('content-encoding');
 	}
 	
 }
