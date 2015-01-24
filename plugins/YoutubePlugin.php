@@ -2,6 +2,11 @@
 
 class YoutubePlugin extends AbstractPlugin {
 
+	function onBeforeRequest(FilterEvent $event){
+	
+		$event->getRequest()->headers->set('user-agent', 'Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/39.0.2171.95 Safari/537.36');
+	}
+	
 	function vn($a, $b){
 		$c = $a[0];
 		$a[0] = $a[$b % strlen($a)];
