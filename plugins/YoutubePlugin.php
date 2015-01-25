@@ -1,5 +1,16 @@
 <?php
 
+// @match http://www.youtube.com/*
+// @match https://www.youtube.com/*
+// @match http://s.ytimg.com/yts/jsbin/html5player*
+// @match https://s.ytimg.com/yts/jsbin/html5player*
+// @match http://manifest.googlevideo.com/*
+// @match https://manifest.googlevideo.com/*
+// @match http://*.googlevideo.com/videoplayback*
+// @match https://*.googlevideo.com/videoplayback*
+// @match http://*.youtube.com/videoplayback*
+// @match https://*.youtube.com/videoplayback*
+
 class YoutubePlugin extends AbstractPlugin {
 
 	function onBeforeRequest(FilterEvent $event){
@@ -13,21 +24,28 @@ class YoutubePlugin extends AbstractPlugin {
 		$a[$b] = $c;
 		return $a;
 	}
-
+	
 	function sig_decipher($sig){
-		$a = strrev($sig);
+
+		$a = $this->vn($sig, 61);
 		
-		//$a = substr($a, 2);
-		$a = $this->vn($a, 16);
-		$a = $this->vn($a, 35);
+		$a = strrev($a);
+		$a = substr($a, 1);
+
+		$a = $this->vn($a, 31);
+		$a = $this->vn($a, 36);
+
+		$a = substr($a, 1);
 		
-		return $a;
-	}
+        return $a;
+    }
 	
 	private function get_youtube_links($html){
 
 		if(preg_match('@url_encoded_fmt_stream_map["\']:\s*["\']([^"\'\s]*)@', $html, $matches)){
 			$parts = explode(",", $matches[1]);
+			
+			//var_dump($parts); exit;
 			
 			foreach($parts as $p){
 				$query = str_replace('\u0026', '&', $p);
@@ -35,9 +53,14 @@ class YoutubePlugin extends AbstractPlugin {
 				
 				$url = $arr['url'];
 				
-				if(isset($arr['s'])){
+				$signature = isset($arr['sig']) ? $arr['sig'] : (isset($arr['signature']) ? $arr['signature'] : null);
+				
+				if($signature){
+					$url = $url.'&signature='.$signature;
+				} else if(isset($arr['s'])){
+				
 					$s = $this->sig_decipher($arr['s']);
-					
+				
 					$url = $url.'&signature='.$s;
 				}
 				
@@ -84,6 +107,8 @@ class YoutubePlugin extends AbstractPlugin {
 				$flv_itags = array(5, 34, 35);
 				$mp4_itags = array(18, 22, 37, 38, 82, 84);
 				$webm_itags = array(43, 44, 46, 100, 102);
+				
+				//var_dump($links);
 				
 				
 				global $config;
