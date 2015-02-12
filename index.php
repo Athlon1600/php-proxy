@@ -20,6 +20,8 @@ foreach (glob("plugins/*.php") as $filename){
 	require($filename);
 }
 
+define('PROXY_VERSION', '1.01');
+
 // constants to be used throughout
 define('SCRIPT_BASE', (!empty($_SERVER['HTTPS']) ? 'https://' : 'http://').$_SERVER['HTTP_HOST'].$_SERVER['PHP_SELF']);
 define('SCRIPT_DIR', pathinfo(SCRIPT_BASE, PATHINFO_DIRNAME).'/');
@@ -39,7 +41,7 @@ if(isset($_POST['url'])){
 } else if(!isset($_GET['q'])){
 
 	// must be at homepage!
-	echo render_template("index", array('script_base' => SCRIPT_BASE));
+	echo render_template("index", array('script_base' => SCRIPT_BASE, 'version' => PROXY_VERSION));
 	exit;
 }
 

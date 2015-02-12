@@ -4,7 +4,6 @@ class XVideosPlugin extends AbstractPlugin {
 
 	public function onBeforeResponse(FilterEvent $event){
 	
-	
 		$response = $event->getResponse();
 		
 		if(preg_match('@flv_url=([^&]+)@', $response->getContent(), $matches)){

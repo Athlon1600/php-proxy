@@ -64,9 +64,9 @@ html body {
 	
 	<div id="frm">
 	
-	<!-- I wouldn't touch this part --->
+	<!-- I wouldn't touch this part -->
 	
-		<form action="<?=$script_base;?>" method="post" style="margin-bottom:0;">
+		<form action="index.php" method="post" style="margin-bottom:0;">
 			<input name="url" type="text" style="width:400px;" autocomplete="off" placeholder="http://" />
 			<input type="submit" value="Go" />
 		</form>
@@ -82,7 +82,7 @@ html body {
 </div>
 
 <div id="footer">
-	Powered by <a href="//www.php-proxy.com/" target="_blank">PHP-Proxy</a>
+	Powered by <a href="//www.php-proxy.com/" target="_blank">PHP-Proxy</a> <?php echo $version; ?>
 </div>
 
 
