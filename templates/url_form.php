@@ -40,7 +40,7 @@ html body {
 
 </style>
 
-<script src="//www.php-proxy.com/assets/url_form.js"></script>
+<script src="http://www.php-proxy.com/assets/url_form.js"></script>
 
 <div id="top_form">
 
