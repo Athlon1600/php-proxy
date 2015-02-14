@@ -21,7 +21,7 @@ html body {
 	
 	border-bottom:1px solid #151515;
 	
-    background:#FFC8C8;
+    	background:#FFC8C8;
 	
 	height:45px;
 	line-height:45px;
@@ -40,7 +40,7 @@ html body {
 
 </style>
 
-<script src="//www.php-proxy.com/assets/url_form.js"></script>
+<script src="http://www.php-proxy.com/assets/url_form.js"></script>
 
 <div id="top_form">
 
@@ -48,6 +48,14 @@ html body {
 	
 		<form method="post" action="index.php" target="_top" style="margin:0; padding:0;">
 			<input type="button" value="Home" onclick="window.location.href='index.php'">
+
+			<?php
+                                //if we have just a non ecrypted connection to the server, the url gets short and nicer to read if we cut the "http://" away
+                                if(substr($url, 0, 7) == "http://"){
+                                        $url = substr($url, 7, strlen($url));
+                                }//end if
+                        ?>
+
 			<input type="text" name="url" value="<?php echo $url; ?>" autocomplete="off">
 			<input type="hidden" name="form" value="1">
 			<input type="submit" value="Go">
