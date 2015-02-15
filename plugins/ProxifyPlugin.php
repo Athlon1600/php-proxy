@@ -57,7 +57,7 @@ class ProxifyPlugin extends AbstractPlugin {
 		$str = preg_replace_callback('@url\s*\((?:\'|"|)(.*?)(?:\'|"|)\)@im', array($this, 'css_url'), $str);
 		
 		// html
-		$str = preg_replace_callback('@href=["|\']([^"\']+)["|\']@im', array($this, 'html_href'), $str);
+		$str = preg_replace_callback('@href\s*=\s*["|\']([^"\']+)["|\']@im', array($this, 'html_href'), $str);
 		$str = preg_replace_callback('@src=["|\']([^"\']+)["|\']@i', array($this, 'html_src'), $str);
 		$str = preg_replace_callback('@<form[^>]*action=["|\'](.+?)["|\'][^>]*>@i', array($this, 'html_action'), $str);
 		
