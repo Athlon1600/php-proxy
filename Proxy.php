@@ -18,11 +18,7 @@ class Proxy {
 	private $output_buffer = '';
 	private $stream = false;
 	
-	public function __construct(Request $request){
-		
-		$this->request = $request;
-		$this->response = new Response();
-		
+	public function __construct(){
 		$this->dispatcher = new EventDispatcher();
 	}
 	
@@ -86,8 +82,11 @@ class Proxy {
 		$this->dispatcher->addSubscriber($plugin);
 	}
 	
-	public function execute($url){
+	public function execute(Request $request){
 	
+		$this->request = $request;
+		$this->response = new Response();
+		
 		$options = array(
 			CURLOPT_CONNECTTIMEOUT 	=> 5,
 			CURLOPT_TIMEOUT 		=> 0,
@@ -138,7 +137,7 @@ class Proxy {
 			$options[CURLOPT_POSTFIELDS] = $this->request->getContent();
 		}
 		
-		$options[CURLOPT_URL] = $url;
+		$options[CURLOPT_URL] = $this->request->getUri();
 		
 		$ch = curl_init();
 		curl_setopt_array($ch, $options);

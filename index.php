@@ -13,16 +13,14 @@ require("global.php");
 require("Proxy.php");
 
 require("exceptions/ProxyException.php");
+require("Request.php");
 require("FilterEvent.php");
 
-// load all plugins at once
-foreach (glob("plugins/*.php") as $filename){
-	require($filename);
-}
+require("plugins/AbstractPlugin.php");
 
-define('PROXY_VERSION', '1.01');
 
 // constants to be used throughout
+define('PROXY_VERSION', '1.01');
 define('SCRIPT_BASE', (!empty($_SERVER['HTTPS']) ? 'https://' : 'http://').$_SERVER['HTTP_HOST'].$_SERVER['PHP_SELF']);
 define('SCRIPT_DIR', pathinfo(SCRIPT_BASE, PATHINFO_DIRNAME).'/');
 define('PLAYER_URL', SCRIPT_DIR.'/flowplayer/flowplayer-3.2.18.swf');
@@ -51,24 +49,30 @@ define('URL', $url);
 
 
 $request = prepare_from_globals($url);
-$proxy = new Proxy($request);
+
+//$request = Request::fromGlobals();
+
+$proxy = new Proxy();
 
 
+// load plugins
+if($config->has('plugins')){
 
-$proxy->addPlugin(new HeaderRewritePlugin());
-$proxy->addPlugin(new CookiePlugin());
-$proxy->addPlugin(new ProxifyPlugin());
-$proxy->addPlugin(new YoutubePlugin());
-$proxy->addPlugin(new DailyMotionPlugin());
-$proxy->addPlugin(new LogPlugin());
-$proxy->addPlugin(new XVideosPlugin());
-$proxy->addPlugin(new XHamsterPlugin());
-$proxy->addPlugin(new RedTubePlugin());
+	foreach($config->get('plugins') as $plugin){
+	
+		$plugin_class = $plugin.'Plugin';
+		
+		require_once('plugins/'.$plugin_class.'.php');
+		
+		$proxy->addPlugin(new $plugin_class());
+	}
+}
+
 
 
 try {
 
-	$response = $proxy->execute($url);
+	$response = $proxy->execute($request);
 	
 	// if headers were already sent, then this must be a streaming response
 	if(!headers_sent()){

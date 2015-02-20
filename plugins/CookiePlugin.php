@@ -8,7 +8,7 @@ class CookiePlugin extends AbstractPlugin {
 	
 	public function onBeforeRequest(FilterEvent $event){
 	
-		$request = $event->getRequest();
+		$request = $event['request'];
 		
 		// rewrite the headers sent from the user
 		$http_cookie = $request->headers->get("cookie");
@@ -40,8 +40,10 @@ class CookiePlugin extends AbstractPlugin {
 	public function onBeforeHeaders(FilterEvent $event){
 	
 		// save cookies received from destination server
-		$request = $event->getRequest();
-		$response = $event->getResponse();
+		extract($event);
+		
+		//$request = $event->getRequest();
+		//$response = $event->getResponse();
 		
 		// does our response send any cookies?
 		$cookies = $response->headers->get('set-cookie', null, false);
