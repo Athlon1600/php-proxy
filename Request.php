@@ -7,25 +7,56 @@ class Request {
 	private $method;
 	private $url;
 	
+	private $server;
+	
 	public $headers;
+	public $data;
 	
 	public function __construct($method, $url){
+	
+		$this->headers = new ParameterBag();
+		$this->data = array();
+	
 		$this->setMethod($method);
 		$this->setUrl($url);
 		
-		$this->headers = new ParameterBag();
+		$this->server = $_SERVER;
 	}
 	
 	public function setMethod($method){
 		$this->method = strtoupper($method);
 	}
 	
+	public function getClientIp(){
+		return $this->server['REMOTE_ADDR'];
+	}
+	
 	public function setUrl($url){
 		$this->url = $url;
+		
+		// update Host header
+		$this->headers->set('Host', parse_url($url, PHP_URL_HOST));
 	}
 	
 	public function getUrl(){
-		return $this->url;
+
+		$qs = '';
+		
+		if($this->method == 'GET'){
+			
+			// overwrite or not?
+			if(strpos($this->url, '?') !== false){
+				$qs = '&'.http_build_query($this->data);
+			} else {
+				$qs = '?'.http_build_query($this->data);
+			}
+		}
+		
+		return $this->url.$qs;
+	}
+	
+	public function matchesUrl($url){
+		return strpos($this->url, $url) !== false;
 	}
 	
 	public function setHeader($name, $value){

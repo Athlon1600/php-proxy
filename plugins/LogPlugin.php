@@ -19,8 +19,8 @@ class LogPlugin extends AbstractPlugin {
 		
 		$vars = array(
 			'ip' => $request->getClientIp(),
-			'url' => $request->getUri(),
-			'date' => date("F j, Y, g:i a")
+			'date' => date("F j, Y, g:i a"),
+			'url' => $request->getUri()
 		);
 		
 		$content_type = $response->headers->get("content_type");

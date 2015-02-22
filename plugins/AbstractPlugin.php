@@ -5,22 +5,22 @@ use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 abstract class AbstractPlugin implements EventSubscriberInterface {
 
 	public function onBeforeRequest(FilterEvent $event){
-		// must override
+		// fired right before a request is being sent to a proxy
 	}
 	
-	public function onBeforeHeaders(FilterEvent $event){
-		// must override
+	public function onHeadersReceived(FilterEvent $event){
+		// fired right after response headers have been fully received
 	}
 	
-	public function onBeforeResponse(FilterEvent $event){
-		// must override
+	public function onCompleted(FilterEvent $event){
+		// fired after full response has been read
 	}
 	
 	final public static function getSubscribedEvents(){
 		return array(
 			'request.before' => 'onBeforeRequest',
-			'response.headers' => 'onBeforeHeaders',
-			'response.body' => 'onBeforeResponse'
+			'response.headers' => 'onHeadersReceived',
+			'response.body' => 'onCompleted'
 		);
 	}
 }

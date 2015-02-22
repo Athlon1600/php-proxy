@@ -4,7 +4,7 @@
 $config = array();
 
 // plugins to load - plugins will be loaded in this exact order as in array
-$config['plugins'] = array('HeaderRewrite', 'Youtube', 'Proxify');
+$config['plugins'] = array('HeaderRewrite', 'Proxify', 'Youtube', 'DailyMotion', 'RedTube', 'XHamster', 'XVideos');
 
 // config params for log plugin
 $config['log.enabled'] = false;

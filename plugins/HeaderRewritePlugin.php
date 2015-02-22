@@ -5,12 +5,12 @@ class HeaderRewritePlugin extends AbstractPlugin {
 	function onBeforeRequest(FilterEvent $event){
 		
 		// tell website that we only accept plain text
-		$event['request']->headers->remove('accept-encoding');
+		$event->getRequest()->headers->remove('accept-encoding');
 	}
 	
-	function onBeforeResponse(FilterEvent $event){
+	function onCompleted(FilterEvent $event){
 	
-		$response = $event['response'];
+		$response = $event->getResponse();
 		
 		// fix redirect - do redirect!
 		if($response->headers->has('location')){

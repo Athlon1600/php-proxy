@@ -134,7 +134,7 @@ class Proxy {
 		
 		if($this->request->getMethod() == 'POST'){
 			$options[CURLOPT_POST] = true;
-			$options[CURLOPT_POSTFIELDS] = $this->request->getContent();
+			$options[CURLOPT_POSTFIELDS] = http_build_query($this->request->request->all());
 		}
 		
 		$options[CURLOPT_URL] = $this->request->getUri();

@@ -2,11 +2,11 @@
 
 use Symfony\Component\HttpFoundation\Cookie;
 
-class CookiePlugin extends AbstractPlugin {
+class CookiePlugin extends EasyPlugin {
 
 	const COOKIE_PREFIX = 'pc_';
 	
-	public function onBeforeRequest(FilterEvent $event){
+	public function onBeforeRequest(ProxyEvent $event){
 	
 		$request = $event['request'];
 		

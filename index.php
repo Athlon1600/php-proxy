@@ -13,7 +13,7 @@ require("global.php");
 require("Proxy.php");
 
 require("exceptions/ProxyException.php");
-require("Request.php");
+//require("Request.php");
 require("FilterEvent.php");
 
 require("plugins/AbstractPlugin.php");
@@ -21,6 +21,7 @@ require("plugins/AbstractPlugin.php");
 
 // constants to be used throughout
 define('PROXY_VERSION', '1.01');
+
 define('SCRIPT_BASE', (!empty($_SERVER['HTTPS']) ? 'https://' : 'http://').$_SERVER['HTTP_HOST'].$_SERVER['PHP_SELF']);
 define('SCRIPT_DIR', pathinfo(SCRIPT_BASE, PATHINFO_DIRNAME).'/');
 define('PLAYER_URL', SCRIPT_DIR.'/flowplayer/flowplayer-3.2.18.swf');
@@ -49,8 +50,6 @@ define('URL', $url);
 
 
 $request = prepare_from_globals($url);
-
-//$request = Request::fromGlobals();
 
 $proxy = new Proxy();
 
@@ -121,7 +120,8 @@ try {
 		echo render_template("index", array(
 			'url' => $url,
 			'script_base' => SCRIPT_BASE,
-			'error_msg' => $ex->getMessage()
+			'error_msg' => $ex->getMessage(),
+			'version' => PROXY_VERSION
 		));
 		
 	}

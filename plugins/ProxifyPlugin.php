@@ -44,7 +44,7 @@ class ProxifyPlugin extends AbstractPlugin {
 	}
 
 	// request response headers content_type
-	public function onBeforeResponse(FilterEvent $event){
+	public function onCompleted(FilterEvent $event){
 	
 		$response = $event->getResponse();
 	

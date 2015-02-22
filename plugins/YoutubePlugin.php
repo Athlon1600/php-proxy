@@ -1,23 +1,7 @@
 <?php
 
-// @match http://www.youtube.com/*
-// @match https://www.youtube.com/*
-// @match http://s.ytimg.com/yts/jsbin/html5player*
-// @match https://s.ytimg.com/yts/jsbin/html5player*
-// @match http://manifest.googlevideo.com/*
-// @match https://manifest.googlevideo.com/*
-// @match http://*.googlevideo.com/videoplayback*
-// @match https://*.googlevideo.com/videoplayback*
-// @match http://*.youtube.com/videoplayback*
-// @match https://*.youtube.com/videoplayback*
-
 class YoutubePlugin extends AbstractPlugin {
 
-	function onBeforeRequest(FilterEvent $event){
-	
-		$event->getRequest()->headers->set('user-agent', 'Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/39.0.2171.95 Safari/537.36');
-	}
-	
 	function vn($a, $b){
 		$c = $a[0];
 		$a[0] = $a[$b % strlen($a)];
