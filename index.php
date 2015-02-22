@@ -9,7 +9,7 @@ use Symfony\Component\HttpFoundation\ParameterBag;
 require("config.php");
 $config = new ParameterBag($config);
 
-require("global.php");
+require("functions.php");
 require("Proxy.php");
 
 require("exceptions/ProxyException.php");
