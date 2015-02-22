@@ -69,7 +69,7 @@ class YoutubePlugin extends AbstractPlugin {
 		return false;
 	}
 	
-	public function onBeforeResponse(FilterEvent $event){
+	public function onCompleted(FilterEvent $event){
 	
 		$response = $event->getResponse();
 		$output = $response->getContent();

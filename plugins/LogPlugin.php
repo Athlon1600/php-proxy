@@ -2,7 +2,7 @@
 
 class LogPlugin extends AbstractPlugin {
 
-	function onBeforeHeaders(FilterEvent $event){
+	function onHeadersReceived(FilterEvent $event){
 	
 		$request = $event->getRequest();
 		$response = $event->getResponse();

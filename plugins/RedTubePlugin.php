@@ -2,7 +2,7 @@
 
 class RedTubePlugin extends AbstractPlugin {
 
-	public function onBeforeResponse(FilterEvent $event){
+	public function onCompleted(FilterEvent $event){
 	
 		$output = $event->getResponse()->getContent();
 	

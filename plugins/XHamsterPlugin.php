@@ -21,7 +21,7 @@ class XHamsterPlugin extends AbstractPlugin {
 	}
 	
 
-	public function onBeforeResponse(FilterEvent $event){
+	public function onCompleted(FilterEvent $event){
 	
 		
 		$response = $event->getResponse();

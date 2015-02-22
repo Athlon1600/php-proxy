@@ -37,13 +37,13 @@ class CookiePlugin extends EasyPlugin {
 	}
 	
 	// rewrite set-cookie header to something else
-	public function onBeforeHeaders(FilterEvent $event){
+	public function onHeadersReceived(FilterEvent $event){
 	
 		// save cookies received from destination server
-		extract($event);
+		//extract($event);
 		
-		//$request = $event->getRequest();
-		//$response = $event->getResponse();
+		$request = $event->getRequest();
+		$response = $event->getResponse();
 		
 		// does our response send any cookies?
 		$cookies = $response->headers->get('set-cookie', null, false);
