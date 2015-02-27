@@ -6,7 +6,27 @@ class HeaderRewritePlugin extends AbstractPlugin {
 		
 		// tell website that we only accept plain text
 		$event->getRequest()->headers->remove('accept-encoding');
+		
+
+		//$event->getResponse()->setContent('response text');
+		////$event->stopPropagation();
+		
 	}
+	
+	function onHeadersReceived(FilterEvent $event){
+	
+		$url = $event->getRequest()->getUri();
+		
+		$file = './storage/cache/'.md5($url);
+		
+		if(file_exists($file)){
+		
+			//$event->getResponse()->setContent
+		
+		}
+	
+	}
+	
 	
 	function onCompleted(FilterEvent $event){
 	
@@ -18,6 +38,20 @@ class HeaderRewritePlugin extends AbstractPlugin {
 			$loc = $response->headers->get('location');
 			
 			$response->headers->set('location', SCRIPT_BASE.'?q='.encrypt_url($loc));
+		}
+		
+		// should we cache this?
+		$url = $event->getRequest()->getUri();
+		
+		if($content_type = $event->getResponse()->headers->get("content-type")){
+		
+			$content_type = clean_content_type($content_type);
+			
+			$cache_types = array("text/javascript", "text/css", "image/jpeg", "image/gif", "image/png");
+			
+			if(in_array($content_type, $cache_types)){
+				//file_put_contents('./storage/cache/'.md5($url), $response->getContent());
+			}
 		}
 		
 		$remove = array("x-frame-options", "x-xss-protection",  "x-content-type-options");

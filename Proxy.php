@@ -60,6 +60,18 @@ class Proxy {
 		return strlen($headers);
 	}
 	
+	private function read_callback($ch, $handle, $max){
+	
+	
+		$data = fread($handle, $max);
+		$len = strlen($data);
+
+		return $data;
+		
+		exit;
+		
+	}
+	
 	private function write_callback($ch, $str){
 	
 		$len = strlen($str);
@@ -113,6 +125,8 @@ class Proxy {
 		
 		$options[CURLOPT_HEADERFUNCTION] = array($this, 'header_callback');
 		$options[CURLOPT_WRITEFUNCTION] = array($this, 'write_callback');
+		
+		//$options[CURLOPT_READFUNCTION] = array($this, 'read_callback');
 		
 		// modify request further
 		$this->dispatcher->dispatch('request.before', $this->generateEvent());

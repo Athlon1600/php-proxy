@@ -3,6 +3,9 @@
 // all possible options will be stored
 $config = array();
 
+// make it as long as possible for extra security...
+$config['secret_key'] = '';
+
 // plugins to load - plugins will be loaded in this exact order as in array
 $config['plugins'] = array('AccessControl', 'HeaderRewrite', 'Proxify', 'Youtube', 'DailyMotion', 'RedTube', 'XHamster', 'XVideos');
 
@@ -18,7 +21,12 @@ $config['ac.url_blacklist'] = array(
 );
 
 // if not empty - block everything EXCEPT urls matching these
-$config['ac.url_whitelist'] = array();
+//$config['ac.url_whitelist'] = array();
+
+
+// do not allow users from these countries
+//$config['ac.country_blacklist'] = array('FR', 'DE', 'CN', 'CA');
+
 
 
 $config['youtube.html5_player'] = true;

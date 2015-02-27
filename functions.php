@@ -45,6 +45,11 @@ function base64_url_decode($input){
 	return base64_decode(str_pad(strtr($input, '-_', '+/'), strlen($input) % 4, '=', STR_PAD_RIGHT));
 }
 
+function in_arrayi($needle, $haystack){
+	return in_array(strtolower($needle), array_map('strtolower', $haystack));
+}
+	
+	
 function data_rot($data, $pass, $reverse = false){
 	
 	$data_len = strlen($data);
