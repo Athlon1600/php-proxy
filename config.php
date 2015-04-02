@@ -7,7 +7,18 @@ $config = array();
 $config['secret_key'] = '';
 
 // plugins to load - plugins will be loaded in this exact order as in array
-$config['plugins'] = array('AccessControl', 'HeaderRewrite', 'Proxify', 'Youtube', 'DailyMotion', 'RedTube', 'XHamster', 'XVideos');
+$config['plugins'] = array(
+	'AccessControl',
+	'HeaderRewrite',
+	'Cookie',
+	'Proxify',
+	'Youtube',
+	'DailyMotion',
+	'RedTube',
+	'XHamster',
+	'XVideos',
+	'Twitter'
+);
 
 // config params for log plugin
 $config['log.enabled'] = false;

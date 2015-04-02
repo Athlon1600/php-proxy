@@ -2,13 +2,13 @@
 
 use Symfony\Component\HttpFoundation\Cookie;
 
-class CookiePlugin extends EasyPlugin {
+class CookiePlugin extends AbstractPlugin {
 
 	const COOKIE_PREFIX = 'pc_';
 	
-	public function onBeforeRequest(ProxyEvent $event){
+	public function onBeforeRequest(FilterEvent $event){
 	
-		$request = $event['request'];
+		$request = $event->getRequest();
 		
 		// rewrite the headers sent from the user
 		$http_cookie = $request->headers->get("cookie");
@@ -30,7 +30,10 @@ class CookiePlugin extends EasyPlugin {
 				
 				// does this cookie belong to this domain?
 				if(strpos($host, $domain) !== false){
-					$request->headers->set('cookie', $data['name'].'='.$data['value'], false);
+				
+				//var_dump($data);
+				
+					//$request->headers->set('cookie', $data['name'].'='.$data['value'], false);
 				}
 			}
 		}

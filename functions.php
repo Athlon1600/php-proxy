@@ -48,18 +48,24 @@ function base64_url_decode($input){
 function in_arrayi($needle, $haystack){
 	return in_array(strtolower($needle), array_map('strtolower', $haystack));
 }
-	
-	
-function data_rot($data, $pass, $reverse = false){
+
+// rotate each string character based on some secret phrase
+function str_rot_pass($data, $pass, $reverse = false){
 	
 	$data_len = strlen($data);
 	$pass_len = strlen($pass);
 	
-	if($pass_len == 0) trigger_error("fnc:data_rot password must not be empty!", E_USER_ERROR);
+	if($pass_len == 0){
+		trigger_error("data_rot password must not be empty!", E_USER_ERROR);
+	}
 	
+	// otherwise you get error array to string conversion...
 	$result = str_repeat(' ', $data_len);
 
 	for($i=0; $i<$data_len; $i++){
+
+		// ascii of string[i] + ascii of password[i]
+		// OR: - ascii of password[i] to decrypt
 		$asc = ord($data[$i])+(ord($pass[$i%$pass_len]) * ($reverse ? -1 : 1));
 		$result[$i] = chr($asc);
 	}
@@ -105,15 +111,14 @@ function render_template($name, $vars = array()){
 	return $contents;
 }
 
+// encrypt destination URL such as www.youtube.com
 function encrypt_url($url){
 	
-	/*
 	global $config;
 	
-	if($config['unique_urls'] === 2){
-		$url = data_rot($url, USER_IP_LONG);
+	if($config->has('secret_key')){
+		$url = str_rot_pass($url, 'secret');
 	}
-	*/
 	
 	return base64_url_encode($url);
 }
@@ -121,6 +126,12 @@ function encrypt_url($url){
 function decrypt_url($url){
 	
 	$url = base64_url_decode($url);
+	
+	global $config;
+	
+	if($config->has('secret_key')){
+		$url = str_rot_pass($url, 'secret', true);
+	}
 	
 	return $url;
 }

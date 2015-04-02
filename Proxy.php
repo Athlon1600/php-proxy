@@ -100,7 +100,7 @@ class Proxy {
 		$this->response = new Response();
 		
 		$options = array(
-			CURLOPT_CONNECTTIMEOUT 	=> 5,
+			CURLOPT_CONNECTTIMEOUT 	=> 10,
 			CURLOPT_TIMEOUT 		=> 0,
 			
 			// don't return anything - we have other functions for that
@@ -113,7 +113,9 @@ class Proxy {
 			
 			// we will take care of redirects
 			CURLOPT_FOLLOWLOCATION	=> false,
-			CURLOPT_AUTOREFERER		=> false
+			CURLOPT_AUTOREFERER		=> false,
+			
+			CURLOPT_MAXREDIRS => 9
 		);
 		
 		
