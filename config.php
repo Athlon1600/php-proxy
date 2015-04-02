@@ -3,7 +3,7 @@
 // all possible options will be stored
 $config = array();
 
-// make it as long as possible for extra security...
+// make it as long as possible for extra security... secret key is being used when encrypting urls
 $config['secret_key'] = '';
 
 // plugins to load - plugins will be loaded in this exact order as in array

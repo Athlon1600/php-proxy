@@ -116,8 +116,8 @@ function encrypt_url($url){
 	
 	global $config;
 	
-	if($config->has('secret_key')){
-		$url = str_rot_pass($url, 'secret');
+	if($config->get('secret_key')){
+		$url = str_rot_pass($url, $config->get('secret_key'));
 	}
 	
 	return base64_url_encode($url);
@@ -129,8 +129,8 @@ function decrypt_url($url){
 	
 	global $config;
 	
-	if($config->has('secret_key')){
-		$url = str_rot_pass($url, 'secret', true);
+	if($config->get('secret_key')){
+		$url = str_rot_pass($url, $config->get('secret_key'), true);
 	}
 	
 	return $url;
