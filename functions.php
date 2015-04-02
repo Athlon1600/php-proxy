@@ -212,5 +212,4 @@ function rel2abs($rel, $base)
 	return $scheme . '://' . $abs;
 }
 
-
 ?>
