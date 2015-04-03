@@ -49,6 +49,17 @@ function in_arrayi($needle, $haystack){
 	return in_array(strtolower($needle), array_map('strtolower', $haystack));
 }
 
+// regular array_merge does not work if arrays have numeric keys...
+function array_merge_custom()
+{
+    $array      = array();
+    $arguments  = func_get_args();
+    foreach($arguments as $args)
+        foreach($args as $key => $value)
+            $array[$key] = $value;
+    return $array;
+}
+
 // rotate each string character based on some secret phrase
 function str_rot_pass($data, $pass, $reverse = false){
 	

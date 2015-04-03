@@ -39,11 +39,14 @@ $config['ac.url_blacklist'] = array(
 //$config['ac.country_blacklist'] = array('FR', 'DE', 'CN', 'CA');
 
 
+// additional curl options to go with each request
+$config['curl'] = array(
+	//CURLOPT_INTERFACE => '123.123.123.13',
+);
 
 $config['youtube.html5_player'] = true;
 //$config['youtube.video_quality'] = 1;
 
-//$config['outgoing_ip'] = '123.123.123.13';
 //$config['error_redirect'] = "https://unblockvideos.com/#error={error_msg}";
 
 

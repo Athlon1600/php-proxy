@@ -115,15 +115,14 @@ class Proxy {
 			CURLOPT_FOLLOWLOCATION	=> false,
 			CURLOPT_AUTOREFERER		=> false,
 			
-			CURLOPT_MAXREDIRS => 9
+			CURLOPT_MAXREDIRS => 5
 		);
 		
-		
+		// this is probably a good place to add custom curl options that way other critical options below would overwrite that
 		global $config;
+		$config_options = $config->get('curl', array());
 		
-		if($config->has("outgoing_ip")){
-			$options[CURLOPT_INTERFACE] = $config->get("outgoing_ip");
-		}
+		$options = array_merge_custom($options, $config_options);
 		
 		$options[CURLOPT_HEADERFUNCTION] = array($this, 'header_callback');
 		$options[CURLOPT_WRITEFUNCTION] = array($this, 'write_callback');
