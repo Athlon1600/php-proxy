@@ -35,7 +35,7 @@ class HeaderRewritePlugin extends AbstractPlugin {
 	
 		$response = $event->getResponse();
 		
-		// fix redirect - do redirect!
+		// proxify header location value
 		if($response->headers->has('location')){
 		
 			$loc = $response->headers->get('location');

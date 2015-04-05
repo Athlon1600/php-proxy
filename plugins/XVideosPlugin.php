@@ -2,6 +2,8 @@
 
 class XVideosPlugin extends AbstractPlugin {
 
+	protected $url_pattern = 'xvideos.com';
+	
 	public function onCompleted(FilterEvent $event){
 	
 		$response = $event->getResponse();
