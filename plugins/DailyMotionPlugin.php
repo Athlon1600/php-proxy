@@ -2,8 +2,10 @@
 
 class DailyMotionPlugin extends AbstractPlugin {
 
-	public function onCompleted(FilterEvent $event){
+	protected $url_pattern = 'dailymotion.com/video/';
 	
+	public function onCompleted(FilterEvent $event){
+		
 		$response = $event->getResponse();
 		
 		$output = $response->getContent();
