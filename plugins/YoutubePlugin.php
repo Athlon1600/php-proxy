@@ -2,6 +2,19 @@
 
 class YoutubePlugin extends AbstractPlugin {
 
+	/*
+	
+	How do we extract direct links to YouTube videos?
+	
+	find .js file url for html5 player inside the video page that's embedded at:
+	<script>var ytplayer = ytplayer......
+	
+	current url:
+	http://s.ytimg.com/yts/jsbin/html5player-en_US-vfldudhuW/html5player.js
+	
+	*/
+	
+	
 	function vn($a, $b){
 		$c = $a[0];
 		$a[0] = $a[$b % strlen($a)];
@@ -27,6 +40,7 @@ class YoutubePlugin extends AbstractPlugin {
 	private function get_youtube_links($html){
 
 		if(preg_match('@url_encoded_fmt_stream_map["\']:\s*["\']([^"\'\s]*)@', $html, $matches)){
+		
 			$parts = explode(",", $matches[1]);
 			
 			//var_dump($parts); exit;
@@ -37,15 +51,18 @@ class YoutubePlugin extends AbstractPlugin {
 				
 				$url = $arr['url'];
 				
-				$signature = isset($arr['sig']) ? $arr['sig'] : (isset($arr['signature']) ? $arr['signature'] : null);
+				if(isset($arr['sig'])){
+					$url = $url.'&signature='.$arr['sig'];
 				
-				if($signature){
-					$url = $url.'&signature='.$signature;
+				} else if(isset($arr['signature'])){
+					$url = $url.'&signature='.$arr['signature'];
+				
 				} else if(isset($arr['s'])){
 				
-					$s = $this->sig_decipher($arr['s']);
-				
-					$url = $url.'&signature='.$s;
+					// this is probably a VEVO/ads video... signature must be decrypted first!
+					$signature = $this->sig_decipher($arr['s']);
+					
+					$url = $url.'&signature='.$signature;
 				}
 				
 				$result[$arr['itag']] = $url;
@@ -106,6 +123,8 @@ class YoutubePlugin extends AbstractPlugin {
 					$mp4_url = $this->find_first_available($links, $mp4_itags);
 					$mp4_url = proxify_url($mp4_url);
 					
+					//var_dump($mp4_url);
+					
 					$player = '<video width="100%" height="100%" controls autoplay>
 									<source src="'.$mp4_url.'" type="video/mp4">
 								Your browser does not support the video tag.
@@ -117,8 +136,10 @@ class YoutubePlugin extends AbstractPlugin {
 					$player = vid_player($vid_url, 640, 390);
 				}
 				
+				// remove the 
 				$output = str_replace('<div id="theater-background" class="player-height"></div>', '', $output);
 				
+				// replace youtube player div block with our own
 				$output = preg_replace('#<div id="player-api"([^>]*)>.*<div class="clear"#s', 
 				'<div id="player-api"$1>'.$player.'</div><div class="clear"', $output, 1);
 			}

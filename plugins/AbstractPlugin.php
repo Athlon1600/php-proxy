@@ -1,4 +1,4 @@
- <?php
+<?php
 
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 
@@ -16,7 +16,7 @@ abstract class AbstractPlugin implements EventSubscriberInterface {
 	}
 	
 	public function onCompleted(FilterEvent $event){
-		// fired after the full response=headers+body has been read
+		// fired after the full response=headers+body has been read - will only be called on "non-streaming" responses
 	}
 	
 	// dispatch based on filter

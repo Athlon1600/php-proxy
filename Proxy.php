@@ -60,6 +60,7 @@ class Proxy {
 		return strlen($headers);
 	}
 	
+	/*
 	private function read_callback($ch, $handle, $max){
 	
 	
@@ -71,6 +72,7 @@ class Proxy {
 		exit;
 		
 	}
+	*/
 	
 	private function write_callback($ch, $str){
 	
