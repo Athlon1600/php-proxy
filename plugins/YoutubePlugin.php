@@ -2,15 +2,17 @@
 
 class YoutubePlugin extends AbstractPlugin {
 
+	protected $url_pattern = 'youtube.com';
+	
 	/*
 	
 	How do we extract direct links to YouTube videos?
 	
-	find .js file url for html5 player inside the video page that's embedded at:
-	<script>var ytplayer = ytplayer......
+	find html5player.js file that's embedded inside any video page source
 	
-	current url:
-	http://s.ytimg.com/yts/jsbin/html5player-en_US-vfldudhuW/html5player.js
+	current js file is located at:
+	
+	//s.ytimg.com/yts/jsbin/html5player-en_US-vfl20EdcH/html5player.js
 	
 	*/
 	
@@ -24,17 +26,14 @@ class YoutubePlugin extends AbstractPlugin {
 	
 	function sig_decipher($sig){
 
-		$a = $this->vn($sig, 61);
+		$a = vn($sig, 12);
+		$a = vn($a, 18);
 		
-		$a = strrev($a);
-		$a = substr($a, 1);
-
-		$a = $this->vn($a, 31);
-		$a = $this->vn($a, 36);
-
 		$a = substr($a, 1);
 		
-        return $a;
+		$a = vn($a, 60);
+		
+		return $a;
     }
 	
 	private function get_youtube_links($html){
@@ -91,61 +90,61 @@ class YoutubePlugin extends AbstractPlugin {
 		$response = $event->getResponse();
 		$output = $response->getContent();
 		
-		$url = $event->getRequest()->getUri();
+		// do this on all youtube pages
+		$output = preg_replace('@masthead-positioner">@', 'masthead-positioner" style="position:static;">', $output, 1);
 		
-		if(contains($url, "youtube.com")){
+		// replace future thumbnails with src=
+		$output = preg_replace('#<img[^>]*data-thumb=#s','<img alt="Thumbnail" src=', $output);
 		
-			// do this on all youtube pages
-			$output = preg_replace('@masthead-positioner">@', 'masthead-positioner" style="position:static;">', $output, 1);
-			$output = preg_replace('#<img[^>]*data-thumb=#s','<img alt="Thumbnail" src=', $output);
+		$links = $this->get_youtube_links($output);
+		
+		// we must be on a video page
+		if($links){
+		
+			// the only ones supported by flowplayer
+			$flv_itags = array(5, 34, 35);
+			
+			// supported by html5 player
+			$mp4_itags = array(18, 22, 37, 38, 82, 84);
+			
+			// not supported by any player at the moment
+			$webm_itags = array(43, 44, 46, 100, 102);
+			
+			//var_dump($links);
 			
 			
-			if(contains($url, "youtube.com/watch")){
+			global $config;
 			
-				$links = $this->get_youtube_links($output);
+			$html5 = $config->get("youtube.html5_player");
+			
+			if($html5){
+			
+				// find mp4
+				$mp4_url = $this->find_first_available($links, $mp4_itags);
+				$mp4_url = proxify_url($mp4_url);
 				
-				// the only ones supported by flowplayer
-				$flv_itags = array(5, 34, 35);
-				$mp4_itags = array(18, 22, 37, 38, 82, 84);
-				$webm_itags = array(43, 44, 46, 100, 102);
+				//var_dump($mp4_url);
 				
-				//var_dump($links);
+				$player = '<video width="100%" height="100%" controls autoplay>
+								<source src="'.$mp4_url.'" type="video/mp4">
+							Your browser does not support the video tag.
+						</video>';
 				
-				
-				global $config;
-				
-				$html5 = $config->get("youtube.html5_player");
-				
-				
-				if($html5){
-				
-					// find mp4
-					$mp4_url = $this->find_first_available($links, $mp4_itags);
-					$mp4_url = proxify_url($mp4_url);
-					
-					//var_dump($mp4_url);
-					
-					$player = '<video width="100%" height="100%" controls autoplay>
-									<source src="'.$mp4_url.'" type="video/mp4">
-								Your browser does not support the video tag.
-							</video>';
-					
-				} else {
-				
-					$vid_url = $this->find_first_available($links, $flv_itags);
-					$player = vid_player($vid_url, 640, 390);
-				}
-				
-				// remove the 
-				$output = str_replace('<div id="theater-background" class="player-height"></div>', '', $output);
-				
-				// replace youtube player div block with our own
-				$output = preg_replace('#<div id="player-api"([^>]*)>.*<div class="clear"#s', 
-				'<div id="player-api"$1>'.$player.'</div><div class="clear"', $output, 1);
+			} else {
+			
+				$vid_url = $this->find_first_available($links, $flv_itags);
+				$player = vid_player($vid_url, 640, 390);
 			}
 			
-			$response->setContent($output);
+			// this div blocks our player controls
+			$output = str_replace('<div id="theater-background" class="player-height"></div>', '', $output);
+			
+			// replace youtube player div block with our own
+			$output = preg_replace('#<div id="player-api"([^>]*)>.*<div class="clear"#s', 
+			'<div id="player-api"$1>'.$player.'</div><div class="clear"', $output, 1);
 		}
+			
+		$response->setContent($output);
 	}
 
 }
