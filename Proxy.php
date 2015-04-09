@@ -117,7 +117,7 @@ class Proxy {
 			CURLOPT_FOLLOWLOCATION	=> false,
 			CURLOPT_AUTOREFERER		=> false,
 			
-			CURLOPT_MAXREDIRS => 5
+			CURLOPT_MAXREDIRS => 99
 		);
 		
 		// this is probably a good place to add custom curl options that way other critical options below would overwrite that
@@ -154,7 +154,8 @@ class Proxy {
 			$options[CURLOPT_POSTFIELDS] = http_build_query($this->request->request->all());
 		}
 		
-		$options[CURLOPT_URL] = $this->request->getUri();
+		// why not just use request->getUri? because that would rearrange the query params alphabetically which some sites don't like
+		$options[CURLOPT_URL] = $request->getScheme().'://'.$request->getHttpHost().$request->getRequestUri();//$this->request->getUri();
 		
 		$ch = curl_init();
 		curl_setopt_array($ch, $options);

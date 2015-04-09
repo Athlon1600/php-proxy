@@ -2,42 +2,37 @@
 
 class XHamsterPlugin extends AbstractPlugin {
 
-	private function get_video($html){
+	protected $url_pattern = 'xhamster.com';
+	
+	private function find_video($html){
 
 		$file = false;
-
-		if(preg_match("@mp4File=(.*?)\"@s", $html, $matches) == 1){
-			$file = $matches[1];
-			$file = rawurldecode($file);
-		} else if(preg_match("@srv=([^&]+)@s", $html, $matches) == 1 && preg_match("@file=([^&]+)@s", $html, $matches2) == 1){
 		
-			$srv = rawurldecode($matches[1]);
-			$file = rawurldecode($matches2[1]);
-			
-			$file = "{$srv}/key={$file}";
+		if(preg_match('@mp4\'\s*file="(.*?)"@m', $html, $matches)){
+			$file = rawurldecode($matches[1]);
+		} else if(preg_match("@srv=&file=([^&]+)@s", $html, $matches)){
+			$file = rawurldecode($matches[1]);
 		}
 		
 		return $file;
 	}
-	
 
 	public function onCompleted(FilterEvent $event){
 	
-		
 		$response = $event->getResponse();
+		$content = $response->getContent();
 		
-		$output = $response->getContent();
-		
-		$vid = $this->get_video($output);
+		$vid = $this->find_video($content);
 	
-		$output = preg_replace('@<div id=\'player\'(.*?)<\/object>.*?</div>@s', '<div id="player">'.vid_player($vid, 638, 505).'</div>', $output);
-		
-		
-		$response->setContent($output);
+		// we must be on a video page?
+		if($vid){
 	
+			$content = preg_replace("@<div id='playerSwf'>.*?loader.*?<\/div>.*?<\/div>.*?<\/div>@s", 
+			"<div id='playerSwf'>".vid_player($vid, 638, 505)."</div>", $content);
+	
+			$response->setContent($content);	
+		}
 	}
-
-
 }
 
 ?>
