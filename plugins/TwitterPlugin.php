@@ -2,61 +2,19 @@
 
 class TwitterPlugin extends AbstractPlugin {
 
-	public function onBeforeRequest(FilterEvent $event){
-		
-		
-		$url = $event->getRequest()->getUri();
-		
-		if(strpos($url, "twitter.com") !== false){
-		
-			//die("twitter");
-		
-			$req = $event->getRequest();
-			
-			$req->headers->remove("content-length");
-			
-
-
-			
-
-			
-		}
-		
-	
-	}
+	protected $url_pattern = 'twitter.com';
 
 	public function onCompleted(FilterEvent $event){
 	
-
-	
-	
-			
-		$url = $event->getRequest()->getUri();
+		// there is some problem with content-length when submitting form...
+		$response = $event->getResponse();
+		$content = $response->getContent();
 		
-		if(strpos($url, "twitter.com") !== false){
-		
-			//die("twitter");
+		// remove all javascript
+		$content = preg_replace('#<script(.*?)>(.*?)</script>#is', '', $content);
 			
-			$res = $event->getResponse();
-			
-			$str = $res->getContent();
-			
-			$str = preg_replace('#<script(.*?)>(.*?)</script>#is', '', $str);
-			
-			$res->setContent($str);
-			
-			
-		}
-		
-		
-		
-		
-	
+		$response->setContent($content);
 	}
-	
-
-
-
 }
 
 ?>
