@@ -115,9 +115,7 @@ class Proxy {
 			
 			// we will take care of redirects
 			CURLOPT_FOLLOWLOCATION	=> false,
-			CURLOPT_AUTOREFERER		=> false,
-			
-			CURLOPT_MAXREDIRS => 99
+			CURLOPT_AUTOREFERER		=> false
 		);
 		
 		// this is probably a good place to add custom curl options that way other critical options below would overwrite that
@@ -160,8 +158,8 @@ class Proxy {
 		$ch = curl_init();
 		curl_setopt_array($ch, $options);
 		
-		// fetch the status
-		$result = curl_exec($ch);
+		// fetch the status - (at) is here to ignore the errors that come from exceptions within header/body read
+		$result = @curl_exec($ch);
 		
 		if($result){
 		
