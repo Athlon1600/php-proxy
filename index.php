@@ -53,6 +53,36 @@ $request = prepare_from_globals($url);
 
 $proxy = new Proxy();
 
+/*
+
+
+$client->getEmitter()->on('before', function (BeforeEvent $e) {
+    echo 'About to send request: ' . $e->getRequest();
+});
+
+*/
+
+/*
+ protected function loadPlugins()
+    {
+        $pluginsDirs = array(
+            __DIR__.'/../../data/plugins/Ladybug/Plugin',
+            __DIR__.'/../../../ladybug-plugins/Ladybug/Plugin',
+            __DIR__.'/../../../ladybug-themes/Ladybug/Plugin'
+        );
+        foreach ($pluginsDirs as $dir) {
+            if (is_dir($dir)) {
+                $finder = new Finder();
+                $finder->in($dir)->files()->depth(1)->name('Plugin.php');
+                foreach ($finder as $file) {
+                    @var SplFileInfo $file 
+                    $this->registerPlugin($file);
+                }
+            }
+        }
+    }
+*/
+
 
 // load plugins
 if($config->has('plugins')){

@@ -26,12 +26,12 @@ class YoutubePlugin extends AbstractPlugin {
 	
 	function sig_decipher($sig){
 
-		$a = vn($sig, 12);
-		$a = vn($a, 18);
+		$a = $this->vn($sig, 12);
+		$a = $this->vn($a, 18);
 		
 		$a = substr($a, 1);
 		
-		$a = vn($a, 60);
+		$a = $this->vn($a, 60);
 		
 		return $a;
     }
