@@ -40,9 +40,8 @@ class Proxy {
 			
 		} else {
 		
-			// end of headers - last line is always empty
-		
-			// do this
+			// this is the end of headers - last line is always empty
+			// notify the dispatcher about this
 			$this->dispatcher->dispatch('response.headers', $this->generateEvent());
 			
 			// what content type are we dealing with here? can be empty
@@ -78,6 +77,7 @@ class Proxy {
 	
 		$len = strlen($str);
 		
+		// if this is a streaming response then output buffer immediately
 		if($this->stream){
 			echo $str;
 			flush();
@@ -92,8 +92,13 @@ class Proxy {
 		return new FilterEvent($this->request, $this->response);
 	}
 	
+	// maybe call it registerPlugin?
 	public function addPlugin(EventSubscriberInterface $plugin){
 		$this->dispatcher->addSubscriber($plugin);
+	}
+	
+	public function addListener($event_name, $listener, $priority = 0){
+		$this->dispatcher->addListener($event_name, $listener, $priority);
 	}
 	
 	public function execute(Request $request){
@@ -177,7 +182,7 @@ class Proxy {
 			return new Response();
 		}
 		
-		// set error
+		// there must have been an error if at this point
 		$error = sprintf('(%d) %s', curl_errno($ch), curl_error($ch));
 		
 		throw new ProxyException($error);

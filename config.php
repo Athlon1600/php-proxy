@@ -18,7 +18,8 @@ $config['plugins'] = array(
 	'RedTube',
 	'XHamster',
 	'XVideos',
-	'Twitter'
+	'Twitter',
+	'Template'
 );
 
 // config params for log plugin

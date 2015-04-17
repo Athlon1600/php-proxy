@@ -20,12 +20,14 @@ require("plugins/AbstractPlugin.php");
 
 
 // constants to be used throughout
+define('PROXY_START', microtime(true));
 define('PROXY_VERSION', '1.01');
 
 define('SCRIPT_BASE', (!empty($_SERVER['HTTPS']) ? 'https://' : 'http://').$_SERVER['HTTP_HOST'].$_SERVER['PHP_SELF']);
 define('SCRIPT_DIR', pathinfo(SCRIPT_BASE, PATHINFO_DIRNAME).'/');
 define('PLAYER_URL', SCRIPT_DIR.'/flowplayer/flowplayer-3.2.18.swf');
 
+//var_dump(SCRIPT_DIR);
 
 // form submit in progress...
 if(isset($_POST['url'])){
@@ -44,14 +46,28 @@ if(isset($_POST['url'])){
 	exit;
 }
 
+
+// get real URL
 $url = decrypt_url($_GET['q']);
 
 define('URL', $url);
 
-
 $request = prepare_from_globals($url);
 
+
+
 $proxy = new Proxy();
+
+
+$proxy->addListener('respnse', function(FilterEvent $event){
+
+
+	$request = $event->getRequest();
+	
+	//var_dump($request->getUri());
+
+});
+
 
 /*
 
@@ -60,27 +76,6 @@ $client->getEmitter()->on('before', function (BeforeEvent $e) {
     echo 'About to send request: ' . $e->getRequest();
 });
 
-*/
-
-/*
- protected function loadPlugins()
-    {
-        $pluginsDirs = array(
-            __DIR__.'/../../data/plugins/Ladybug/Plugin',
-            __DIR__.'/../../../ladybug-plugins/Ladybug/Plugin',
-            __DIR__.'/../../../ladybug-themes/Ladybug/Plugin'
-        );
-        foreach ($pluginsDirs as $dir) {
-            if (is_dir($dir)) {
-                $finder = new Finder();
-                $finder->in($dir)->files()->depth(1)->name('Plugin.php');
-                foreach ($finder as $file) {
-                    @var SplFileInfo $file 
-                    $this->registerPlugin($file);
-                }
-            }
-        }
-    }
 */
 
 
@@ -98,44 +93,16 @@ if($config->has('plugins')){
 }
 
 
-
 try {
 
 	$response = $proxy->execute($request);
 	
-	// if headers were already sent, then this must be a streaming response
-	if(!headers_sent()){
-	
-		// send headers first!
-		$response->sendHeaders();
-		
-		// resource contents
-		$output = $response->getContent();
-		
-		$master_page = is_html($response->headers->get('content-type'));
-		
-		// if this is the master page, then include URL form
-		if($master_page){
-			
-			$url_form = render_template("url_form", array(
-				'url' => $url,
-				'script_base' => SCRIPT_BASE
-			));
-			
-			// does the html page contain <body> tag, if so insert our form right after <body> tag starts
-			$output = preg_replace('@<body.*?>@is', '$0'.PHP_EOL.$url_form, $output, 1, $count);
-			
-			// <body> tag was not found, just put the form at the top of the page
-			if($count == 0){
-				$output = $url_form.$output;
-			}
-		}
-		
-		echo $output;
-	}
+	// if that was a streaming response, then everything was already sent so response will be empty and nothing actually gets sent here
+	$response->send();
 	
 } catch (Exception $ex){
 
+	// if the site is on server2.proxy.com then you may wish to redirect it back to proxy.com
 	if($config->has("error_redirect")){
 	
 		$url = render_string($config->get("error_redirect"), array(

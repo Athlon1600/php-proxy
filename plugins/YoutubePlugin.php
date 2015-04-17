@@ -140,8 +140,8 @@ class YoutubePlugin extends AbstractPlugin {
 			$output = str_replace('<div id="theater-background" class="player-height"></div>', '', $output);
 			
 			// replace youtube player div block with our own
-			$output = preg_replace('#<div id="player-api"([^>]*)>.*<div class="clear"#s', 
-			'<div id="player-api"$1>'.$player.'</div><div class="clear"', $output, 1);
+			$output = preg_replace('#<div id="player-api"([^>]*)>.*?<div id="watch-queue-mole"#s', 
+			'<div id="player-api"$1>'.$player.'</div><div id="watch-queue-mole"', $output, 1);
 		}
 			
 		$response->setContent($output);
