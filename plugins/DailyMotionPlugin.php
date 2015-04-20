@@ -20,7 +20,7 @@ class DailyMotionPlugin extends AbstractPlugin {
 
 				$url = $matches[1];
 				$url = stripslashes($url); 
-
+						
 				$output = preg_replace('#\<div\sclass\=\"dmpi_video_playerv4(.*?)>.*?\<\/div\>#s', 
 			'<div class="dmpi_video_playerv4${1}>'.vid_player($url, 620, 348).'</div>', $output, 1);
 			

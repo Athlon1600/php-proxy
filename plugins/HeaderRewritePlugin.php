@@ -21,12 +21,15 @@ class HeaderRewritePlugin extends AbstractPlugin {
 		
 			$loc = $response->headers->get('location');
 			
+			// we use rel2abs in case location has relative path such as /us
+			$loc = rel2abs($loc, $event->getRequest()->getUri());
+			
 			$response->headers->set('location', SCRIPT_BASE.'?q='.encrypt_url($loc));
 		}
 		
 		$code = $response->getStatusCode();
 		$text = $response::$statusTexts[$code];
-		
+
 		if($code >= 400 && $code <= 600){
 			throw new Exception("Error accessing resource: {$code} - {$text}");
 		}
