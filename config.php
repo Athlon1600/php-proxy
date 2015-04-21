@@ -47,9 +47,6 @@ $config['curl'] = array(
 	//CURLOPT_USERAGENT => 'Firefox 5000'
 );
 
-$config['youtube.html5_player'] = true;
-//$config['youtube.video_quality'] = 1;
-
 //$config['error_redirect'] = "https://unblockvideos.com/#error={error_msg}";
 
 

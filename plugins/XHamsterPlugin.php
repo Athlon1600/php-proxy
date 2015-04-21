@@ -23,10 +23,10 @@ class XHamsterPlugin extends AbstractPlugin {
 		$content = $response->getContent();
 		
 		$vid = $this->find_video($content);
-	
+		
 		// we must be on a video page?
 		if($vid){
-	
+						
 			$content = preg_replace("@<div id='playerSwf'>.*?loader.*?<\/div>.*?<\/div>.*?<\/div>@s", 
 			"<div id='playerSwf'>".vid_player($vid, 638, 505)."</div>", $content);
 	

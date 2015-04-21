@@ -110,31 +110,10 @@ class YoutubePlugin extends AbstractPlugin {
 			// not supported by any player at the moment
 			$webm_itags = array(43, 44, 46, 100, 102);
 			
-			//var_dump($links);
+			// find first available mp4 video
+			$mp4_url = $this->find_first_available($links, $mp4_itags);
 			
-			
-			global $config;
-			
-			$html5 = $config->get("youtube.html5_player");
-			
-			if($html5){
-			
-				// find mp4
-				$mp4_url = $this->find_first_available($links, $mp4_itags);
-				$mp4_url = proxify_url($mp4_url);
-				
-				//var_dump($mp4_url);
-				
-				$player = '<video width="100%" height="100%" controls autoplay>
-								<source src="'.$mp4_url.'" type="video/mp4">
-							Your browser does not support the video tag.
-						</video>';
-				
-			} else {
-			
-				$vid_url = $this->find_first_available($links, $flv_itags);
-				$player = vid_player($vid_url, 640, 390);
-			}
+			$player = vid_player($mp4_url, 640, 390, 'mp4');
 			
 			// this div blocks our player controls
 			$output = str_replace('<div id="theater-background" class="player-height"></div>', '', $output);
