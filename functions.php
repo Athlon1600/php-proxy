@@ -199,7 +199,7 @@ function vid_player($url, $width, $height, $extension = false){
 		// encode before embedding it into player's parameters
 		$video_url = rawurlencode($video_url); 
 	
-		$html = '<object id="flowplayer" width="'.$width.'" height="'.$height.'" data="'.PLAYER_URL.'" type="application/x-shockwave-flash">
+		$html = '<object id="flowplayer" width="'.$width.'" height="'.$height.'" data="//releases.flowplayer.org/swf/flowplayer-3.2.18.swf" type="application/x-shockwave-flash">
  	 
        	<param name="allowfullscreen" value="true" />
 		<param name="wmode" value="transparent" />

@@ -26,6 +26,7 @@ class Proxy {
 	
 		$parts = explode(":", $headers, 2);
 		
+		// extract status code
 		if(preg_match('/HTTP\/1.\d+ (\d+)/', $headers, $matches)){
 		
 			$this->response->setStatusCode($matches[1]);
@@ -35,7 +36,7 @@ class Proxy {
 			$name = strtolower($parts[0]);
 			$value = trim($parts[1]);
 			
-			// set it up!
+			// this must be a header: value line
 			$this->response->headers->set($name, $value, false);
 			
 		} else {
@@ -92,13 +93,12 @@ class Proxy {
 		return new FilterEvent($this->request, $this->response);
 	}
 	
-	// maybe call it registerPlugin?
-	public function addPlugin(EventSubscriberInterface $plugin){
-		$this->dispatcher->addSubscriber($plugin);
+	public function getEventDispatcher(){
+		return $this->dispatcher;
 	}
 	
-	public function addListener($event_name, $listener, $priority = 0){
-		$this->dispatcher->addListener($event_name, $listener, $priority);
+	private function convertRequest(){
+	
 	}
 	
 	public function execute(Request $request){

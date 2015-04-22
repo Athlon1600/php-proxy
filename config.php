@@ -48,6 +48,7 @@ $config['curl'] = array(
 );
 
 //$config['error_redirect'] = "https://unblockvideos.com/#error={error_msg}";
+//$config['index_redirect'] = 'https://unblockvideos.com/';
 
 
 ?>

@@ -11,9 +11,6 @@ $config = new ParameterBag($config);
 
 require("functions.php");
 require("Proxy.php");
-
-require("exceptions/ProxyException.php");
-//require("Request.php");
 require("FilterEvent.php");
 
 require("plugins/AbstractPlugin.php");
@@ -25,7 +22,6 @@ define('PROXY_VERSION', '1.01');
 
 define('SCRIPT_BASE', (!empty($_SERVER['HTTPS']) ? 'https://' : 'http://').$_SERVER['HTTP_HOST'].$_SERVER['PHP_SELF']);
 define('SCRIPT_DIR', pathinfo(SCRIPT_BASE, PATHINFO_DIRNAME).'/');
-define('PLAYER_URL', SCRIPT_DIR.'/flowplayer/flowplayer-3.2.18.swf');
 
 //var_dump(SCRIPT_DIR);
 
@@ -41,8 +37,17 @@ if(isset($_POST['url'])){
 	
 } else if(!isset($_GET['q'])){
 
-	// must be at homepage!
-	echo render_template("index", array('script_base' => SCRIPT_BASE, 'version' => PROXY_VERSION));
+	// must be at homepage - should we be here?
+	if($config->has('index_redirect')){
+		
+		// redirect to...
+		header("HTTP/1.1 301 Moved Permanently"); 
+		header("Location: ".$config->get('index_redirect'));
+		
+	} else {
+		echo render_template("index", array('script_base' => SCRIPT_BASE, 'version' => PROXY_VERSION));
+	}
+	
 	exit;
 }
 
@@ -55,28 +60,7 @@ define('URL', $url);
 $request = prepare_from_globals($url);
 
 
-
 $proxy = new Proxy();
-
-
-$proxy->addListener('respnse', function(FilterEvent $event){
-
-
-	$request = $event->getRequest();
-	
-	//var_dump($request->getUri());
-
-});
-
-
-/*
-
-
-$client->getEmitter()->on('before', function (BeforeEvent $e) {
-    echo 'About to send request: ' . $e->getRequest();
-});
-
-*/
 
 
 // load plugins
@@ -88,7 +72,7 @@ if($config->has('plugins')){
 		
 		require_once('plugins/'.$plugin_class.'.php');
 		
-		$proxy->addPlugin(new $plugin_class());
+		$proxy->getEventDispatcher()->addSubscriber(new $plugin_class());
 	}
 }
 
