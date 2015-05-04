@@ -2,28 +2,29 @@
 
 require("vendor/autoload.php");
 
+define('PROXY_START', microtime(true));
+define('SCRIPT_BASE', (!empty($_SERVER['HTTPS']) ? 'https://' : 'http://').$_SERVER['HTTP_HOST'].$_SERVER['PHP_SELF']);
+define('SCRIPT_DIR', pathinfo(SCRIPT_BASE, PATHINFO_DIRNAME).'/');
+
+require("src/helpers.php");
+require("src/Config.php");
+require("src/Proxy.php");
+require("src/Event/FilterEvent.php");
+
+require("src/Plugin/AbstractPlugin.php");
+
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\ParameterBag;
 
-require("config.php");
-$config = new ParameterBag($config);
-
-require("functions.php");
-require("Proxy.php");
-require("FilterEvent.php");
-
-require("plugins/AbstractPlugin.php");
+use Proxy\Plugin\AbstractPlugin;
+use Proxy\Event\FilterEvent;
+use Proxy\Config;
+use Proxy\Proxy;
 
 
-// constants to be used throughout
-define('PROXY_START', microtime(true));
-define('PROXY_VERSION', '1.01');
-
-define('SCRIPT_BASE', (!empty($_SERVER['HTTPS']) ? 'https://' : 'http://').$_SERVER['HTTP_HOST'].$_SERVER['PHP_SELF']);
-define('SCRIPT_DIR', pathinfo(SCRIPT_BASE, PATHINFO_DIRNAME).'/');
-
-//var_dump(SCRIPT_DIR);
+// load config...
+Config::load('./config.php');
 
 // form submit in progress...
 if(isset($_POST['url'])){
@@ -37,12 +38,12 @@ if(isset($_POST['url'])){
 	
 } else if(!isset($_GET['q'])){
 
-	// must be at homepage - should we be here?
-	if($config->has('index_redirect')){
+	// must be at homepage - should we redirect somewhere else?
+	if(Config::get('index_redirect')){
 		
 		// redirect to...
 		header("HTTP/1.1 301 Moved Permanently"); 
-		header("Location: ".$config->get('index_redirect'));
+		header("Location: ".Config::get('index_redirect'));
 		
 	} else {
 		echo render_template("index", array('script_base' => SCRIPT_BASE, 'version' => PROXY_VERSION));
@@ -57,39 +58,70 @@ $url = decrypt_url($_GET['q']);
 
 define('URL', $url);
 
-$request = prepare_from_globals($url);
+
+$request = request_from_globals($url);
 
 
 $proxy = new Proxy();
 
 
 // load plugins
-if($config->has('plugins')){
+foreach(Config::get('plugins', array()) as $plugin){
 
-	foreach($config->get('plugins') as $plugin){
+	$plugin_class = $plugin.'Plugin';
 	
-		$plugin_class = $plugin.'Plugin';
-		
-		require_once('plugins/'.$plugin_class.'.php');
-		
-		$proxy->getEventDispatcher()->addSubscriber(new $plugin_class());
-	}
+	require_once('src/Plugin/'.$plugin_class.'.php');
+	
+	$plugin_class = '\\Proxy\\Plugin\\'.$plugin_class;
+	
+	$proxy->getEventDispatcher()->addSubscriber(new $plugin_class());
 }
+
+// provide URL form
+$proxy->getEventDispatcher()->addListener('request.complete', function($event){
+
+	$request = $event->getRequest();
+	$response = $event->getResponse();
+	
+	$url = $request->getUri();
+	
+	// we attach url_form only if this is a html response
+	if(!is_html($response->headers->get('content-type'))){
+		return;
+	}
+	
+	$url_form = render_template("url_form", array(
+		'url' => $url,
+		'script_base' => SCRIPT_BASE
+	));
+	
+	$output = $response->getContent();
+	
+	// does the html page contain <body> tag, if so insert our form right after <body> tag starts
+	$output = preg_replace('@<body.*?>@is', '$0'.PHP_EOL.$url_form, $output, 1, $count);
+	
+	// <body> tag was not found, just put the form at the top of the page
+	if($count == 0){
+		$output = $url_form.$output;
+	}
+	
+	$response->setContent($output);
+});
 
 
 try {
 
 	$response = $proxy->execute($request);
 	
-	// if that was a streaming response, then everything was already sent so response will be empty and nothing actually gets sent here
+	// if that was a streaming response, then everything was already sent so response will be empty and nothing actually will be sent here
 	$response->send();
 	
 } catch (Exception $ex){
 
 	// if the site is on server2.proxy.com then you may wish to redirect it back to proxy.com
-	if($config->has("error_redirect")){
+	if(Config::get("error_redirect")){
 	
-		$url = render_string($config->get("error_redirect"), array(
+		$url = render_string(Config::get("error_redirect"), array(
 			'error_msg' => rawurlencode($ex->getMessage())
 		));
 		
