@@ -4,15 +4,15 @@ namespace Proxy\Plugin;
 
 use Proxy\Plugin\AbstractPlugin;
 use Symfony\Component\HttpFoundation\Cookie;
-use Proxy\Event\FilterEvent;
+use Proxy\Event\ProxyEvent;
 
 class CookiePlugin extends AbstractPlugin {
 
 	const COOKIE_PREFIX = 'pc_';
 	
-	public function onBeforeRequest(FilterEvent $event){
+	public function onBeforeRequest(ProxyEvent $event){
 	
-		$request = $event->getRequest();
+		$request = $event['request'];
 		
 		// rewrite the headers sent from the user
 		$http_cookie = $request->headers->get("cookie");
@@ -44,13 +44,13 @@ class CookiePlugin extends AbstractPlugin {
 	}
 	
 	// rewrite set-cookie header to something else
-	public function onHeadersReceived(FilterEvent $event){
+	public function onHeadersReceived(ProxyEvent $event){
 	
 		// save cookies received from destination server
 		//extract($event);
 		
-		$request = $event->getRequest();
-		$response = $event->getResponse();
+		$request = $event['request'];
+		$response = $event['response'];
 		
 		// does our response send any cookies?
 		$cookies = $response->headers->get('set-cookie', null, false);

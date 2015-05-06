@@ -3,23 +3,23 @@
 namespace Proxy\Plugin;
 
 use Proxy\Plugin\AbstractPlugin;
-use Proxy\Event\FilterEvent;
+use Proxy\Event\ProxyEvent;
 
 class HeaderRewritePlugin extends AbstractPlugin {
 
-	function onBeforeRequest(FilterEvent $event){
+	function onBeforeRequest(ProxyEvent $event){
 		
 		// tell target website that we only accept plain text
-		$event->getRequest()->headers->remove('accept-encoding');
+		$event['request']->headers->remove('accept-encoding');
 
 		// mask proxy referer
-		$event->getRequest()->headers->remove('referer');
+		$event['request']->headers->remove('referer');
 	}
 	
-	function onHeadersReceived(FilterEvent $event){
+	function onHeadersReceived(ProxyEvent $event){
 	
 		// so stupid... onCompleted won't be called on "streaming" responses
-		$response = $event->getResponse();
+		$response = $event['response'];
 		
 		// proxify header location value
 		if($response->headers->has('location')){
@@ -33,7 +33,7 @@ class HeaderRewritePlugin extends AbstractPlugin {
 		$text = $response::$statusTexts[$code];
 
 		if($code >= 400 && $code <= 600){
-			throw new Exception("Error accessing resource: {$code} - {$text}");
+			throw new \Exception("Error accessing resource: {$code} - {$text}");
 		}
 		
 		// TODO: convert this to a whitelist rather than a blacklist

@@ -3,7 +3,7 @@
 namespace Proxy\Plugin;
 
 use Proxy\Plugin\AbstractPlugin;
-use Proxy\Event\FilterEvent;
+use Proxy\Event\ProxyEvent;
 
 class XHamsterPlugin extends AbstractPlugin {
 
@@ -22,9 +22,9 @@ class XHamsterPlugin extends AbstractPlugin {
 		return $file;
 	}
 
-	public function onCompleted(FilterEvent $event){
+	public function onCompleted(ProxyEvent $event){
 	
-		$response = $event->getResponse();
+		$response = $event['response'];
 		$content = $response->getContent();
 		
 		$vid = $this->find_video($content);

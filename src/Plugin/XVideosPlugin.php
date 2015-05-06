@@ -3,15 +3,15 @@
 namespace Proxy\Plugin;
 
 use Proxy\Plugin\AbstractPlugin;
-use Proxy\Event\FilterEvent;
+use Proxy\Event\ProxyEvent;
 
 class XVideosPlugin extends AbstractPlugin {
 
 	protected $url_pattern = 'xvideos.com';
 	
-	public function onCompleted(FilterEvent $event){
+	public function onCompleted(ProxyEvent $event){
 	
-		$response = $event->getResponse();
+		$response = $event['response'];
 		
 		if(preg_match('@flv_url=([^&]+)@', $response->getContent(), $matches)){
 

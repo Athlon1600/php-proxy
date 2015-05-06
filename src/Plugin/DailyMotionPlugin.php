@@ -3,19 +3,19 @@
 namespace Proxy\Plugin;
 
 use Proxy\Plugin\AbstractPlugin;
-use Proxy\Event\FilterEvent;
+use Proxy\Event\ProxyEvent;
 
 class DailyMotionPlugin extends AbstractPlugin {
 
 	protected $url_pattern = 'dailymotion.com/video/';
 	
-	public function onCompleted(FilterEvent $event){
+	public function onCompleted(ProxyEvent $event){
 		
-		$response = $event->getResponse();
+		$response = $event['response'];
 		
 		$output = $response->getContent();
 		
-		if(preg_match('/video\/([^_]+)/', $event->getRequest()->getUri(), $matches)){
+		if(preg_match('/video\/([^_]+)/', $event['request']->getUri(), $matches)){
 		
 			$id = $matches[1];
 			

@@ -3,7 +3,7 @@
 namespace Proxy\Plugin;
 
 use Proxy\Plugin\AbstractPlugin;
-use Proxy\Event\FilterEvent;
+use Proxy\Event\ProxyEvent;
 
 class YoutubePlugin extends AbstractPlugin {
 
@@ -90,9 +90,9 @@ class YoutubePlugin extends AbstractPlugin {
 		return false;
 	}
 	
-	public function onCompleted(FilterEvent $event){
+	public function onCompleted(ProxyEvent $event){
 	
-		$response = $event->getResponse();
+		$response = $event['response'];
 		$output = $response->getContent();
 		
 		// do this on all youtube pages

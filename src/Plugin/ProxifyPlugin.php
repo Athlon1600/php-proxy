@@ -3,7 +3,7 @@
 namespace Proxy\Plugin;
 
 use Proxy\Plugin\AbstractPlugin;
-use Proxy\Event\FilterEvent;
+use Proxy\Event\ProxyEvent;
 
 class ProxifyPlugin extends AbstractPlugin {
 
@@ -50,12 +50,10 @@ class ProxifyPlugin extends AbstractPlugin {
 	}
 
 	// request response headers content_type
-	public function onCompleted(FilterEvent $event){
+	public function onCompleted(ProxyEvent $event){
 	
-		$response = $event->getResponse();
-	
+		$response = $event['response'];
 		$str = $response->getContent();
-		
 
 		// let's remove all frames??
 		$str = preg_replace('@<iframe[^>]+>.*?<\\/iframe>@is', '', $str);
@@ -67,7 +65,6 @@ class ProxifyPlugin extends AbstractPlugin {
 		$str = preg_replace_callback('@href\s*=\s*(["|\'])([^"\']+)(["|\'])@im', array($this, 'html_href'), $str);
 		$str = preg_replace_callback('@src=["|\']([^"\']+)["|\']@i', array($this, 'html_src'), $str);
 		$str = preg_replace_callback('@<form[^>]*action=["|\'](.+?)["|\'][^>]*>@i', array($this, 'html_action'), $str);
-		
 		
 		
 		$response->setContent($str);

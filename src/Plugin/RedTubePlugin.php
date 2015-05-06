@@ -3,13 +3,13 @@
 namespace Proxy\Plugin;
 
 use Proxy\Plugin\AbstractPlugin;
-use Proxy\Event\FilterEvent;
+use Proxy\Event\ProxyEvent;
 
 class RedTubePlugin extends AbstractPlugin {
 
-	public function onCompleted(FilterEvent $event){
+	public function onCompleted(ProxyEvent $event){
 	
-		$output = $event->getResponse()->getContent();
+		$output = $event['response']->getContent();
 	
 		if(preg_match('@video_url=([^&]+)@', $output, $matches)){
 		
@@ -20,8 +20,7 @@ class RedTubePlugin extends AbstractPlugin {
 			$output = preg_replace('@<div id="redtube_flv_player"(.*?)>.*?<noscript>.*?<\/noscript>.*?<\/div>@s', 
 			'<div id="redtube_flv_player"$1>'.$player.'</div>', $output);
 			
-			
-			$event->getResponse()->setContent($output);
+			$event['response']->setContent($output);
 		}
 	}
 

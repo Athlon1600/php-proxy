@@ -3,16 +3,16 @@
 namespace Proxy\Plugin;
 
 use Proxy\Plugin\AbstractPlugin;
-use Proxy\Event\FilterEvent;
+use Proxy\Event\ProxyEvent;
 
 class TwitterPlugin extends AbstractPlugin {
 
 	protected $url_pattern = 'twitter.com';
 
-	public function onCompleted(FilterEvent $event){
+	public function onCompleted(ProxyEvent $event){
 	
 		// there is some problem with content-length when submitting form...
-		$response = $event->getResponse();
+		$response = $event['response'];
 		$content = $response->getContent();
 		
 		// remove all javascript
