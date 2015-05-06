@@ -3,29 +3,33 @@
 namespace Proxy\Plugin;
 
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
-use Proxy\Event\FilterEvent;
+use Proxy\Event\ProxyEvent;
 
 abstract class AbstractPlugin implements EventSubscriberInterface {
 
 	// we're only interested in events that pass our url filter
 	protected $url_pattern;
 	
-	public function onBeforeRequest(FilterEvent $event){
+	public function onBeforeRequest(ProxyEvent $event){
 		// fired right before a request is being sent to a proxy
 	}
 	
-	public function onHeadersReceived(FilterEvent $event){
+	public function onHeadersReceived(ProxyEvent $event){
 		// fired right after response headers have been fully received - last chance to modify before sending it back to the user
 	}
 	
-	public function onCompleted(FilterEvent $event){
+	public function onCurlWrite(ProxyEvent $event){
+		// fired as the data is being written piece by piece
+	}
+	
+	public function onCompleted(ProxyEvent $event){
 		// fired after the full response=headers+body has been read - will only be called on "non-streaming" responses
 	}
 	
 	// dispatch based on filter
-	final public function route(FilterEvent $event){
+	final public function route(ProxyEvent $event){
 	
-		$url = $event->getRequest()->getUri();
+		$url = $event['request']->getUri();
 		
 		// url filter provided and current request url does not match it
 		if($this->url_pattern && strpos($url, $this->url_pattern) === false){
@@ -42,6 +46,10 @@ abstract class AbstractPlugin implements EventSubscriberInterface {
 				$this->onHeadersReceived($event);
 			break;
 			
+			case 'curl.callback.write':
+				$this->onCurlWrite($event);
+			break;
+			
 			case 'request.complete':
 				$this->onCompleted($event);
 			break;
@@ -52,6 +60,7 @@ abstract class AbstractPlugin implements EventSubscriberInterface {
 		return array(
 			'request.before_send' => 'route',
 			'request.sent' => 'route',
+			'curl.callback.write' => 'route',
 			'request.complete' => 'route'
 		);
 	}

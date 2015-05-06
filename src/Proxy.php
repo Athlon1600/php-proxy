@@ -7,9 +7,10 @@ use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 use Symfony\Component\EventDispatcher\EventDispatcher;
 use Symfony\Component\EventDispatcher\Event;
+use Symfony\Component\EventDispatcher\GenericEvent;
 
 use Proxy\Config;
-use Proxy\Event\FilterEvent;
+use Proxy\Event\ProxyEvent;
 
 define('PROXY_VERSION', 2);
 
@@ -19,10 +20,7 @@ class Proxy {
 	private $response;
 	private $dispatcher;
 	
-	// stream: Set to true to stream a response body rather than download it all up front
-	private $output_buffer_types = array('text/html', 'text/plain', 'text/css', 'text/javascript', 'application/x-javascript', 'application/javascript');
 	private $output_buffer = '';
-	private $stream = false;
 	
 	public function __construct(){
 		$this->dispatcher = new EventDispatcher();
@@ -47,56 +45,26 @@ class Proxy {
 			
 		} else {
 		
-			// this is the end of headers - last line is always empty
-			// notify the dispatcher about this
-			$this->dispatcher->dispatch('request.sent', $this->generateEvent());
-			
-			// what content type are we dealing with here? can be empty
-			$content_type = $this->response->headers->get('content-type');
-			$content_type = clean_content_type($content_type);
-			
-			// output immediately as it's being streamed or buffer everything until the end?
-			if($content_type && !in_array($content_type, $this->output_buffer_types)){
-
-				$this->stream = true;
-				$this->response->sendHeaders();
-			}
+			// this is the end of headers - last line is always empty - notify the dispatcher about this
+			$this->dispatcher->dispatch('request.sent', new ProxyEvent(array('request' => $this->request, 'response' => $this->response)));
 		}
 		
 		return strlen($headers);
 	}
 	
-	/*
-	private function read_callback($ch, $handle, $max){
-	
-	
-		$data = fread($handle, $max);
-		$len = strlen($data);
-
-		return $data;
-		
-		exit;
-		
-	}
-	*/
-	
 	private function write_callback($ch, $str){
 	
 		$len = strlen($str);
 		
-		// if this is a streaming response then output buffer immediately
-		if($this->stream){
-			echo $str;
-			flush();
-		} else {
-			$this->output_buffer .= $str;
-		}
+		$this->dispatcher->dispatch('curl.callback.write', new ProxyEvent(array(
+			'request' => $this->request,
+			'data' => $str
+		)));
+		
+		// do we need to buffer or not?
+		$this->output_buffer .= $str;
 		
 		return $len;
-	}
-	
-	private function generateEvent(){
-		return new FilterEvent($this->request, $this->response);
 	}
 	
 	public function getEventDispatcher(){
@@ -136,12 +104,11 @@ class Proxy {
 		
 		$options[CURLOPT_HEADERFUNCTION] = array($this, 'header_callback');
 		$options[CURLOPT_WRITEFUNCTION] = array($this, 'write_callback');
-		
 		//$options[CURLOPT_READFUNCTION] = array($this, 'read_callback');
 		
-		// modify request further
-		$this->dispatcher->dispatch('request.before_send', $this->generateEvent());
-
+		// notify listeners that the request is ready to be sent - last chance to make any modifications
+		$this->dispatcher->dispatch('request.before_send', new ProxyEvent(array('request' => $this->request)));
+		
 		$headers = $this->request->headers->all();
 		
 		$real = array();
@@ -169,28 +136,22 @@ class Proxy {
 		curl_setopt_array($ch, $options);
 		
 		// fetch the status - (at) is here to ignore the errors that come from exceptions within header/body read
-		$result = @curl_exec($ch);
-		
-		if($result){
-		
-			// we have output waiting in the buffer?
-			if(!$this->stream){
-			
-				$this->response->setContent($this->output_buffer);
-				
-				$this->dispatcher->dispatch('request.complete', $this->generateEvent());
-				
-				return $this->response;
-			}
-			
-			// if we're streaming then send empty response back
-			return new Response();
-		}
+		$result = curl_exec($ch);
 		
 		// there must have been an error if at this point
-		$error = sprintf('(%d) %s', curl_errno($ch), curl_error($ch));
+		if(!$result){
+				
+			$error = sprintf('(%d) %s', curl_errno($ch), curl_error($ch));
 		
-		throw new Exception($error);
+			throw new \Exception($error);
+		}
+		
+		// we have output waiting in the buffer?
+		$this->response->setContent($this->output_buffer);
+		
+		$this->dispatcher->dispatch('request.complete', new ProxyEvent(array('request' => $this->request, 'response' => $this->response)));
+		
+		return $this->response;
 	}
 }
 

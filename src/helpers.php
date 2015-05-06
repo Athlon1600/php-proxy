@@ -113,6 +113,8 @@ function render_template($name, $vars = array()){
 	// this is where the views will be stored
 	$file_path = get_base_path().'templates/'.$name.'.php';
 	
+	$file_path = $name.'.php';
+	
 	ob_start();
 	
 	if(file_exists($file_path)){
