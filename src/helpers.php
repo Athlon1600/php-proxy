@@ -3,14 +3,6 @@
 use Symfony\Component\HttpFoundation\Request;
 use Proxy\Config;
 
-function request_from_globals($url){
-
-	$method = $_SERVER['REQUEST_METHOD'];
-	$request = Request::create($url, $method, $method == 'POST' ? $_POST : array(), $_COOKIE, $_FILES, $_SERVER);
-
-	return $request;
-}
-
 // strip away extra parameters text/html; charset=UTF-8
 function clean_content_type($content_type){
 	return preg_replace('@;.*@', '', $content_type);

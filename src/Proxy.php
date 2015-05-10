@@ -72,11 +72,16 @@ class Proxy {
 	}
 	
 	private function convertRequest(){
-	
+		// nothing here
 	}
 	
-	public function execute(Request $request){
+	public function forward(Request $request, $url){
 	
+		// change request URL
+		$request = Request::create($url, $request->getMethod(), $request->query->all() ? $request->query->all() : $request->request->all(), 
+		$request->cookies->all(), $request->files->all(), $request->server->all());
+		
+		// prepare request and response objects
 		$this->request = $request;
 		$this->response = new Response();
 		
@@ -129,8 +134,7 @@ class Proxy {
 			$options[CURLOPT_POSTFIELDS] = http_build_query($this->request->request->all());
 		}
 		
-		// why not just use request->getUri? because that would rearrange the query params alphabetically which some sites don't like
-		$options[CURLOPT_URL] = $request->getScheme().'://'.$request->getHttpHost().$request->getRequestUri();//$this->request->getUri();
+		$options[CURLOPT_URL] = $url;
 		
 		$ch = curl_init();
 		curl_setopt_array($ch, $options);
