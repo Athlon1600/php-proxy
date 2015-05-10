@@ -97,22 +97,17 @@ function render_string($str, $vars = array()){
 	return $str;
 }
 
-function render_template($name, $vars = array()){
+function render_template($file_path, $vars = array()){
 
 	// variables to be used within that template
 	extract($vars);
-	
-	// this is where the views will be stored
-	$file_path = get_base_path().'templates/'.$name.'.php';
-	
-	$file_path = $name.'.php';
 	
 	ob_start();
 	
 	if(file_exists($file_path)){
 		include($file_path);
 	} else {
-		die("Failed to load template: {$name}");
+		die("Failed to load template: {$file_path}");
 	}
 	
 	$contents = ob_get_contents();
