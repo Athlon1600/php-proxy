@@ -12,10 +12,11 @@ use Symfony\Component\EventDispatcher\GenericEvent;
 use Proxy\Config;
 use Proxy\Event\ProxyEvent;
 
-define('PROXY_VERSION', 2);
-
 class Proxy {
-
+	
+	// proxy version!
+	const VERSION = '2.0.1';
+	
 	private $request;
 	private $response;
 	private $dispatcher;
