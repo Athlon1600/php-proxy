@@ -15,7 +15,7 @@ use Proxy\Event\ProxyEvent;
 class Proxy {
 	
 	// proxy version!
-	const VERSION = '2.0.1';
+	const VERSION = '2.0.2';
 	
 	private $request;
 	private $response;
@@ -92,7 +92,7 @@ class Proxy {
 		
 		$options = array(
 			CURLOPT_CONNECTTIMEOUT 	=> 10,
-			CURLOPT_TIMEOUT 		=> 0,
+			CURLOPT_TIMEOUT			=> 0,
 			
 			// don't return anything - we have other functions for that
 			CURLOPT_RETURNTRANSFER	=> false,
@@ -144,8 +144,8 @@ class Proxy {
 		$ch = curl_init();
 		curl_setopt_array($ch, $options);
 		
-		// fetch the status - (at) is here to ignore the errors that come from exceptions within header/body read
-		$result = curl_exec($ch);
+		// fetch the status - if exception if throw any at callbacks, then the error will be supressed
+		$result = @curl_exec($ch);
 		
 		// there must have been an error if at this point
 		if(!$result){
