@@ -78,8 +78,12 @@ class Proxy {
 	
 	public function forward(Request $request, $url){
 	
+		// turn query params if any to array
+		$query = parse_url($url, PHP_URL_QUERY);
+		$query = (array)parse_str($query);
+		
 		// change request URL
-		$request = Request::create($url, $request->getMethod(), $request->query->all() ? $request->query->all() : $request->request->all(), 
+		$request = Request::create($url, $request->getMethod(), $request->getMethod() == 'POST'? $request->request->all() : $query, 
 		$request->cookies->all(), $request->files->all(), $request->server->all());
 		
 		// prepare request and response objects
