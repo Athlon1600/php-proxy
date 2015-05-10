@@ -11,6 +11,9 @@
 	"autoload": {
 		"psr-4": {
 			"Proxy\\": "src/"
-		}
+		},
+		"files": [
+			"src/helpers.php"
+		]
 	}
 }
