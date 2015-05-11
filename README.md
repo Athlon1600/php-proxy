@@ -4,11 +4,11 @@ php-proxy
 Proxy script built on PHP, Symfony and cURL.
 This library borrows ideas from Glype, Jenssegers proxy, and Guzzle.
 
-Full Working PHP-Proxy
+PHP-Proxy Web Application
 -------
 
-If you're looking for a **project** version of this script that functions similar to Glype, then visit
-[php-proxy-script](https://github.com/Athlon1600/php-proxy-script)
+If you're looking for a **project** version of this script that functions as a Web Application similar to Glype, then visit
+[**php-proxy-app**](https://github.com/Athlon1600/php-proxy-app)
 
 See this php-proxy in action:
 <a href="https://unblockvideos.com/" target="_blank">UnblockVideos.com</a>
