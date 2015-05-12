@@ -20,13 +20,15 @@ class HeaderRewritePlugin extends AbstractPlugin {
 	
 		// so stupid... onCompleted won't be called on "streaming" responses
 		$response = $event['response'];
+		$request_url = $event['request']->getUri();
 		
 		// proxify header location value
 		if($response->headers->has('location')){
 		
 			$location = $response->headers->get('location');
 			
-			$response->headers->set('location', proxify_url($location));
+			// just in case this is a relative url like: /en
+			$response->headers->set('location', proxify_url($location, $request_url));
 		}
 		
 		$code = $response->getStatusCode();

@@ -7,6 +7,8 @@ use Proxy\Event\ProxyEvent;
 
 class ProxifyPlugin extends AbstractPlugin {
 
+	private $base_url = '';
+	
 	// what about urls like these? ../fonts/base/TheSans_LT_TT4i.svg
 	function css_url($matches){
 	
@@ -16,7 +18,7 @@ class ProxifyPlugin extends AbstractPlugin {
 			return $matches[0];
 		}
 		
-		return ': url(\''.proxify_url($url).'\')';
+		return ': url(\''.proxify_url($url, $this->base_url).'\')';
 	}
 
 	function html_href($matches){
@@ -27,7 +29,7 @@ class ProxifyPlugin extends AbstractPlugin {
 			return $matches[0];
 		}
 	
-		return 'href='.$matches[1].proxify_url($url).$matches[3];
+		return 'href='.$matches[1].proxify_url($url, $this->base_url).$matches[3];
 	}
 
 	function html_src($matches){
@@ -36,7 +38,7 @@ class ProxifyPlugin extends AbstractPlugin {
 			return $matches[0];
 		}
 		
-		return 'src="'.proxify_url($matches[1]).'"';
+		return 'src="'.proxify_url($matches[1], $this->base_url).'"';
 	}
 
 	function html_action($matches){
@@ -48,10 +50,12 @@ class ProxifyPlugin extends AbstractPlugin {
 		$result = str_replace("<form", '<form method="POST"', $result);
 		return $result;
 	}
-
-	// request response headers content_type
+	
 	public function onCompleted(ProxyEvent $event){
 	
+		// to be used when proxifying all the relative links
+		$this->base_url = $event['request']->getUri();
+		
 		$response = $event['response'];
 		$str = $response->getContent();
 
@@ -65,7 +69,6 @@ class ProxifyPlugin extends AbstractPlugin {
 		$str = preg_replace_callback('@href\s*=\s*(["|\'])([^"\']+)(["|\'])@im', array($this, 'html_href'), $str);
 		$str = preg_replace_callback('@src=["|\']([^"\']+)["|\']@i', array($this, 'html_src'), $str);
 		$str = preg_replace_callback('@<form[^>]*action=["|\'](.+?)["|\'][^>]*>@i', array($this, 'html_action'), $str);
-		
 		
 		$response->setContent($str);
 	}

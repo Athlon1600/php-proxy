@@ -53,32 +53,30 @@ function array_merge_custom()
     return $array;
 }
 
-// rotate each string character based on some secret phrase
-function str_rot_pass($data, $pass, $reverse = false){
+// rotate each string character based on corresponding ascii values from some key
+function str_rot_pass($str, $key, $decrypt = false){
 	
-	$data_len = strlen($data);
-	$pass_len = strlen($pass);
+	// if key happens to be shorter than the data
+	$key_len = strlen($key);
 	
-	if($pass_len == 0){
-		trigger_error("data_rot password must not be empty!", E_USER_ERROR);
-	}
+	$result = str_repeat(' ', strlen($str));
 	
-	// otherwise you get error array to string conversion...
-	$result = str_repeat(' ', $data_len);
+	for($i=0; $i<strlen($str); $i++){
 
-	for($i=0; $i<$data_len; $i++){
-
-		// ascii of string[i] + ascii of password[i]
-		// OR: - ascii of password[i] to decrypt
-		$asc = ord($data[$i])+(ord($pass[$i%$pass_len]) * ($reverse ? -1 : 1));
-		$result[$i] = chr($asc);
+		if($decrypt){
+			$ascii = ord($str[$i]) - ord($key[$i % $key_len]);
+		} else {
+			$ascii = ord($str[$i]) + ord($key[$i % $key_len]);
+		}
+	
+		$result[$i] = chr($ascii);
 	}
 	
 	return $result;
 }
 
-function get_base_path(){
-	return getcwd().'/';
+function app_url(){
+	return (!empty($_SERVER['HTTPS']) ? 'https://' : 'http://').$_SERVER['HTTP_HOST'].$_SERVER['PHP_SELF'];
 }
 
 function render_string($str, $vars = array()){
@@ -133,32 +131,40 @@ function contains($haystack, $needle){
 	return strpos($haystack, $needle) !== false;
 }
 
-// encrypt destination URL such as www.youtube.com
-function encrypt_url($url){
-	
-	if(Config::get('secret_key')){
-		$url = str_rot_pass($url, Config::get('secret_key'));
+function base64_encrypt($data, $key = false){
+
+	if($key){
+		$data = str_rot_pass($data, $key);
+	} else if(Config::get('encryption_key')){
+		$data = str_rot_pass($data, Config::get('encryption_key'));
 	}
 	
-	return base64_url_encode($url);
+	return base64_url_encode($data);
 }
 
-function decrypt_url($url){
+function base64_decrypt($data, $key = false){
+
+	$data = base64_url_decode($data);
 	
-	$url = base64_url_decode($url);
-	
-	if(Config::get('secret_key')){
-		$url = str_rot_pass($url, Config::get('secret_key'), true);
+	if($key){
+		$data = str_rot_pass($data, $key, true);
+	} else if(Config::get('encryption_key')){
+		$data = str_rot_pass($data, Config::get('encryption_key'));
 	}
 	
-	return $url;
+	return $data;
 }
 
-// www.youtube.com TO script.com/index.php?q=encrypt(www.youtube.com)
-function proxify_url($url){
+// www.youtube.com TO proxy-app.com/index.php?q=encrypt_url(www.youtube.com)
+function proxify_url($url, $base_url = ''){
+	
 	$url = htmlspecialchars_decode($url);
-	$url = rel2abs($url, URL); // URL is the base
-	return SCRIPT_BASE.'?q='.encrypt_url($url);
+	
+	if($base_url){
+		$url = rel2abs($url, $base_url);
+	}
+	
+	return app_url().'?q='.base64_encrypt($url);
 }
 
 function vid_player($url, $width, $height, $extension = false){
@@ -176,7 +182,8 @@ function vid_player($url, $width, $height, $extension = false){
 		}
 	}
 	
-	$video_url = proxify_url($url); // proxify!
+	// this better be an absolute url
+	$video_url = proxify_url($url);
 
 	if($html5){
 	
@@ -188,7 +195,7 @@ function vid_player($url, $width, $height, $extension = false){
 	} else {
 	
 		// encode before embedding it into player's parameters
-		$video_url = rawurlencode($video_url); 
+		$video_url = rawurlencode($video_url);
 	
 		$html = '<object id="flowplayer" width="'.$width.'" height="'.$height.'" data="//releases.flowplayer.org/swf/flowplayer-3.2.18.swf" type="application/x-shockwave-flash">
  	 
