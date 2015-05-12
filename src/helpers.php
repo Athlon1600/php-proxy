@@ -149,7 +149,7 @@ function base64_decrypt($data, $key = false){
 	if($key){
 		$data = str_rot_pass($data, $key, true);
 	} else if(Config::get('encryption_key')){
-		$data = str_rot_pass($data, Config::get('encryption_key'));
+		$data = str_rot_pass($data, Config::get('encryption_key'), true);
 	}
 	
 	return $data;
