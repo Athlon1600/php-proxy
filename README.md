@@ -29,7 +29,7 @@ Example
 
 require('vendor/autoload.php');
 
-use Symfony\Component\HttpFoundation\Request;
+use Proxy\Http\Request;
 use Proxy\Proxy;
 
 $request = Request::createFromGlobals();
