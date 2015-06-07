@@ -7,7 +7,7 @@ use Proxy\Event\ProxyEvent;
 
 abstract class AbstractPlugin implements EventSubscriberInterface {
 
-	// we're only interested in events that pass our url filter
+	// apply these methods only to those events whose request URL passes this filter
 	protected $url_pattern;
 	
 	public function onBeforeRequest(ProxyEvent $event){

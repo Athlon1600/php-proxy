@@ -1,11 +1,11 @@
 {
 	"name": "athlon1600/php-proxy",
 	"type": "library",
-	"version": "2.0.0",
+	"version": "3.0.0",
 	"keywords": ["php proxy", "proxy script", "php web proxy", "web proxy"],
 	"homepage": "https://www.php-proxy.com/",
 	"require": {
-		"symfony/http-foundation": "~2.6",
+		"ext-curl": "*",
 		"symfony/event-dispatcher": "~2.6"
 	},
 	"autoload": {

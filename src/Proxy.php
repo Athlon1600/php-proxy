@@ -2,8 +2,6 @@
 
 namespace Proxy;
 
-use Symfony\Component\HttpFoundation\Request;
-use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 use Symfony\Component\EventDispatcher\EventDispatcher;
 use Symfony\Component\EventDispatcher\Event;
@@ -11,11 +9,13 @@ use Symfony\Component\EventDispatcher\GenericEvent;
 
 use Proxy\Config;
 use Proxy\Event\ProxyEvent;
+use Proxy\Http\Request;
+use Proxy\Http\Response;
 
 class Proxy {
 	
 	// proxy version!
-	const VERSION = '2.0.2';
+	const VERSION = '3.0.0';
 	
 	private $request;
 	private $response;
@@ -72,19 +72,10 @@ class Proxy {
 		return $this->dispatcher;
 	}
 	
-	private function convertRequest(){
-		// nothing here
-	}
-	
 	public function forward(Request $request, $url){
 	
-		// turn query params if any to array
-		$query = parse_url($url, PHP_URL_QUERY);
-		$query = (array)parse_str($query);
-		
 		// change request URL
-		$request = Request::create($url, $request->getMethod(), $request->getMethod() == 'POST'? $request->request->all() : $query, 
-		$request->cookies->all(), $request->files->all(), $request->server->all());
+		$request->setUrl($url);
 		
 		// prepare request and response objects
 		$this->request = $request;
@@ -119,26 +110,10 @@ class Proxy {
 		// notify listeners that the request is ready to be sent - last chance to make any modifications
 		$this->dispatcher->dispatch('request.before_send', new ProxyEvent(array('request' => $this->request)));
 		
-		$headers = $this->request->headers->all();
-		
-		$real = array();
-		
-		foreach($headers as $name => $value){
-		
-			if(is_array($value)){
-				$value = implode("; ", $value);
-			}
-			
-			$real[] = $name.': '.$value;
-		}
-		
-		$options[CURLOPT_HTTPHEADER] = $real;
-		
-		if($this->request->getMethod() == 'POST'){
-			$options[CURLOPT_POST] = true;
-			$options[CURLOPT_POSTFIELDS] = http_build_query($this->request->request->all());
-		}
-		
+		// fill in the rest of cURL options
+		$options[CURLOPT_HTTPHEADER] = explode("\r\n", $this->request->getRawHeaders());
+		$options[CURLOPT_CUSTOMREQUEST] = $this->request->getMethod();
+		$options[CURLOPT_POSTFIELDS] =  $this->request->getRawBody();
 		$options[CURLOPT_URL] = $url;
 		
 		$ch = curl_init();

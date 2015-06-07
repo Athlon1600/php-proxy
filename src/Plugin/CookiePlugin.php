@@ -3,7 +3,6 @@
 namespace Proxy\Plugin;
 
 use Proxy\Plugin\AbstractPlugin;
-use Symfony\Component\HttpFoundation\Cookie;
 use Proxy\Event\ProxyEvent;
 
 class CookiePlugin extends AbstractPlugin {
@@ -53,7 +52,7 @@ class CookiePlugin extends AbstractPlugin {
 		$response = $event['response'];
 		
 		// does our response send any cookies?
-		$cookies = $response->headers->get('set-cookie', null, false);
+		$cookies = $response->headers->get('set-cookie');
 		
 		if($cookies){
 		
@@ -61,8 +60,9 @@ class CookiePlugin extends AbstractPlugin {
 			$response->headers->remove('set-cookie');
 			
 			// loop through each set-cookie
-			foreach($cookies as $cookie_str){
+			foreach( (array)$cookies as $cookie_str){
 			
+			/*
 				try {
 				
 					// valid instance of Cookie will hopefully be returned
@@ -78,6 +78,9 @@ class CookiePlugin extends AbstractPlugin {
 				} catch (InvalidArgumentException $ex){
 					//var_dump($ex->getMessage());
 				}
+				
+				*/
+				
 			}
 		}	
 	}
@@ -125,7 +128,7 @@ class CookiePlugin extends AbstractPlugin {
 		
 		extract($data);
 		
-		return new Cookie($name, $value, $expire, $path, $domain, $secure, $httpOnly);
+		return null;//new Cookie($name, $value, $expire, $path, $domain, $secure, $httpOnly);
 	}
 
 }

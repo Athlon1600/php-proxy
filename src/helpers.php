@@ -1,6 +1,5 @@
 <?php
 
-use Symfony\Component\HttpFoundation\Request;
 use Proxy\Config;
 
 // strip away extra parameters text/html; charset=UTF-8
