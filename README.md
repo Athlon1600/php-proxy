@@ -26,7 +26,6 @@ Example
 --------
 
 ```php
-
 require('vendor/autoload.php');
 
 use Proxy\Http\Request;
@@ -34,7 +33,7 @@ use Proxy\Proxy;
 
 $request = Request::createFromGlobals();
 
-$proxy = new Proxy($request, "http://www.yahoo.com");
+$proxy = new Proxy();
 
 $proxy->getEventDispatcher()->addListener('request.before_send', function($event){
 
@@ -59,7 +58,10 @@ $proxy->getEventDispatcher()->addListener('request.complete', function($event){
 	
 });
 
-$proxy->send();
+$response = $proxy->forward($request, "http://www.yahoo.com");
+
+// send the response back to the client
+$response->send();
 
 ```
 
