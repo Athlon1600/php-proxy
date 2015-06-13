@@ -2,7 +2,15 @@
 
 namespace Proxy\Http;
 
-// https://github.com/guzzle/guzzle/blob/v3.5.0/src/Guzzle/Common/Collection.php
+/*
+
+heavily borrowed from Symfony's ParameterBag and Guzzle Collection
+
+https://github.com/guzzle/guzzle/blob/v3.5.0/src/Guzzle/Common/Collection.php
+
+*/
+
+
 class ParamStore {
 
 	protected $data = array();
@@ -36,6 +44,9 @@ class ParamStore {
 	
 	public function replace(array $data){
 	
+		// remove all existing items first
+		$this->clear();
+		
 		foreach($data as $key => $value){
 			$this->set($key, $value);
 		}

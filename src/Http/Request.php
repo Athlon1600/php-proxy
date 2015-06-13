@@ -14,9 +14,6 @@ class Request {
 	// Custom attributes to go with each Request instance - has nothing to do with HTTP
 	public $params; // parameters
 	
-	// Query string for URL queryParams
-	//public $query;
-	
 	// HTTP headers for this request - all in lowercase
 	public $headers;
 	
@@ -26,30 +23,43 @@ class Request {
 	// Collection of POST fields to be submitted
 	public $post;
 	
+	// Query string parameters for URL
+	public $get;
+	
 	// Files to be uploaded with POST
 	public $files;
 	
-	// Raw POST data that will be sent
+	// User set body contents
 	private $body = null;
+	
+	// Library generated body that is regenerated through prepare method
+	private $prepared_body = null;
 	
 	public function __construct($method, $url, $headers = array(), $body = null){
 
 		$this->params = new ParamStore();
 		$this->headers = new ParamStore();
 		
-		// POST data
-		$this->post = new ParamStore();
-		$this->files = new ParamStore();
+		// http params
+		$this->post = new ParamStore(null, true);
+		$this->get = new ParamStore(null, true);
 		
-		$this->setMethod($method);
+		$this->files = new ParamStore(null, true);
+		
+		$this->setMethod($method);		
 		$this->setUrl($url);
 		$this->setBody($body);
 		
-		// make the request ready to be sent right from the start - prepare must be called manually from this point on if you ever add post or file data
+		// make the request ready to be sent right from the start - prepare must be called manually from this point on if you ever add post or file parameters
 		$this->prepare();
 	}
 	
-	// add content-type, content-length, transfer-encoding, and expect headers
+	/*
+		Does multiple things
+		- regenerate content body based on $post and $files parameters
+		- set content-type, content-length headers
+		- set transfer-encoding, expect headers
+	*/
 	public function prepare(){
 	
 		/*
@@ -60,19 +70,20 @@ class Request {
 		// Must be a multipart request
 		if($this->files->all()){
 		
-			$boundary = '-----'.md5(microtime().rand());
-		
-			$this->body = Request::buildPostBody($this->post->all(), $this->files->all());
-			$this->headers->set('content-type', 'multipart/form-data; boundary=bbb');
+			$boundary = self::generateBoundary();
+			
+			$this->prepared_body = Request::buildPostBody($this->post->all(), $this->files->all(), $boundary);
+			$this->headers->set('content-type', 'multipart/form-data; boundary='.$boundary);
 		
 		} else if($this->post->all()){
 			
-			$this->body = http_build_query($this->post->all());
+			$this->prepared_body = http_build_query($this->post->all());
 			$this->headers->set('content-type', 'application/x-www-form-urlencoded');
 			
-		} else if(!$this->headers->has('content-type')){
+		} else {
 		
-			// detect content-type on our own
+			$this->headers->set('content-type', $this->detectContentType($this->body));
+			$this->prepared_body = $this->body;
 		}
 		
 		/*
@@ -80,12 +91,13 @@ class Request {
 		http://www.w3.org/Protocols/rfc2616/rfc2616-sec4.html#sec4.4
 		*/
 		
-		$len = strlen($this->body);
+		$len = strlen($this->prepared_body);
 		
-		if($len == 0){
-			$this->headers->remove('content-length');
-		} else {
+		if($len > 0){
 			$this->headers->set('content-length', $len);
+		} else {
+			$this->headers->remove('content-length');
+			$this->headers->remove('content-type');
 		}
 	}
 	
@@ -103,6 +115,23 @@ class Request {
 	}
 	
 	public function setUrl($url){
+	
+		// remove hashtag
+		$url = preg_replace('/#([\w-]*)/', '', $url);
+		
+		// check if url has any query parameters
+		$query = parse_url($url, PHP_URL_QUERY);
+		
+		// remove it and add the query params to get collection
+		if($query){
+			$url = str_replace('?'.$query, '', $url);
+			
+			$temp = array();
+			mb_parse_str($query, $temp);
+			
+			$this->get->replace($temp);
+		}
+		
 		$this->url = $url;
 		
 		$this->headers->set('host', parse_url($url, PHP_URL_HOST));
@@ -127,6 +156,12 @@ class Request {
 	}
 	
 	public function getUrl(){
+		
+		// does this URL have any query parameters?
+		if($this->get->all()){
+			return $this->url.'?'.http_build_query($this->get->all());
+		}
+		
 		return $this->url;
 	}
 	
@@ -142,7 +177,9 @@ class Request {
 		return $this->protocol_version;
 	}
 	
-	// Setting body will delete/overwrite all the parameters currently stored in post and files
+	// Set raw contents of the body
+	// this will clear all the values currently stored in POST and FILES
+	// will be ignored during PREPARE if post or files contain any values
 	public function setBody($body, $content_type = false){
 	
 		// clear old body data
@@ -154,7 +191,7 @@ class Request {
 			$body = http_build_query($body);
 		}
 		
-		$this->body = $body;
+		$this->body = (string)$body;
 		
 		// plain text should be: text/plain; charset=UTF-8
 		if($content_type){
@@ -163,6 +200,10 @@ class Request {
 		
 		// do it!
 		$this->prepare();
+	}
+	
+	private static function generateBoundary(){
+		return '-----'.md5(microtime().rand());
 	}
 	
 	// can be $_POST and $_FILES
@@ -174,7 +215,7 @@ class Request {
 
 		// each part should be preceeded by this line
 		if(!$boundary){
-			$boundary = '-----'.md5(microtime().rand());
+			$boundary = self::generateBoundary();
 		}
 		
 		$body = '';
@@ -202,18 +243,18 @@ class Request {
 		return $body;
 	}
 	
-	private function getBodyContentType(){
+	private function detectContentType($data){
 		
 		// http://www.w3.org/Protocols/rfc1341/4_Content-Type.html
 		
 		// If the media type remains unknown, the recipient SHOULD treat it as type "application/octet-stream". 
 		$content_type = 'application/octet-stream';
 		
-		if(preg_match('/^{\s*"[^"]+"\s*:/', $this->body)){
+		if(preg_match('/^{\s*"[^"]+"\s*:/', $data)){
 			$content_type = 'application/json';
-		} else if(preg_match('/^(?:<\?xml[^?>]+\?>)\s*<[^>]+>/i', $this->body)){
+		} else if(preg_match('/^(?:<\?xml[^?>]+\?>)\s*<[^>]+>/i', $data)){
 			$content_type = 'application/xml';
-		} else if(preg_match('/^[a-zA-Z0-9_.~-]+=[^&]*&/', $this->body)){
+		} else if(preg_match('/^[a-zA-Z0-9_.~-]+=[^&]*&/', $data)){
 			$content_type = 'application/x-www-form-urlencoded';
 		}
 		
@@ -221,6 +262,7 @@ class Request {
 	}
 	
 	// Returns a parsed version of the body
+	/*
 	public function getBody(){
 	
 		// what is the content type?
@@ -241,10 +283,11 @@ class Request {
 		
 		return null;
 	}
+	*/
 	
 	// Returns raw body string exactly as it appears in the HTTP request
-	public function getRawBody(){	
-		return $this->body;
+	public function getRawBody(){
+		return $this->prepared_body;
 	}
 	
 	public static function createFromGlobals(){
@@ -276,11 +319,13 @@ class Request {
 		// will be empty if content-type is multipart
 		$input = file_get_contents("php://input");
 		
-		if($input){
-			$request->setBody($input);
-		} else if(count($_FILES) > 0 || count($_POST) > 0){
+		if(count($_FILES) > 0){
 			$request->post->replace($_POST);
 			$request->files->replace($_FILES);
+		} else if(count($_POST) > 0){
+			$request->post->replace($_POST);
+		} else {
+			$request->setBody($input);
 		}
 		
 		// for extra convenience

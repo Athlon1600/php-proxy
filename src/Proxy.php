@@ -105,16 +105,17 @@ class Proxy {
 		
 		$options[CURLOPT_HEADERFUNCTION] = array($this, 'header_callback');
 		$options[CURLOPT_WRITEFUNCTION] = array($this, 'write_callback');
-		//$options[CURLOPT_READFUNCTION] = array($this, 'read_callback');
 		
-		// notify listeners that the request is ready to be sent - last chance to make any modifications
+		// Notify any listeners that the request is ready to be sent, and this is your last chance to make any modifications.
 		$this->dispatcher->dispatch('request.before_send', new ProxyEvent(array('request' => $this->request)));
+		
+		// any plugin might have changed our URL by this point
+		$options[CURLOPT_URL] = $this->request->getUri();
 		
 		// fill in the rest of cURL options
 		$options[CURLOPT_HTTPHEADER] = explode("\r\n", $this->request->getRawHeaders());
 		$options[CURLOPT_CUSTOMREQUEST] = $this->request->getMethod();
 		$options[CURLOPT_POSTFIELDS] =  $this->request->getRawBody();
-		$options[CURLOPT_URL] = $url;
 		
 		$ch = curl_init();
 		curl_setopt_array($ch, $options);

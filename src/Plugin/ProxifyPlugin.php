@@ -73,7 +73,26 @@ class ProxifyPlugin extends AbstractPlugin {
 	}
 	
 	public function onBeforeRequest(ProxyEvent $event){
+		
+		$request = $event['request'];
+		
 		// check if one of the POST pairs is convertGET - if so, convert this request to GET
+		if($request->post->has('convertGET')){
+			
+			// we don't need this parameter anymore
+			$request->post->remove('convertGET');
+			
+			// replace all GET parameters with POST data
+			$request->get->replace($request->post->all());
+			
+			// remove POST data
+			$request->post->clear();
+			
+			// This is now a GET request
+			$request->setMethod('GET');
+			
+			$request->prepare();
+		}
 	}
 	
 	public function onCompleted(ProxyEvent $event){
@@ -97,8 +116,6 @@ class ProxifyPlugin extends AbstractPlugin {
 		
 		$response->setContent($str);
 	}
-
-
 
 }
 
