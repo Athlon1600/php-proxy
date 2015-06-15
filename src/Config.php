@@ -24,7 +24,13 @@ class Config {
 	public static function load($path){
 	
 		if(file_exists($path)){
-			self::$config = array_merge(self::$config, require $path);
+		
+			// Successful includes, unless overridden by the included file, return 1.
+			$data = require($path);
+			
+			if(is_array($data)){
+				self::$config = array_merge(self::$config, $data);
+			}
 		}
 	}
 
