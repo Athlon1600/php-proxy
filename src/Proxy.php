@@ -15,16 +15,22 @@ use Proxy\Http\Response;
 class Proxy {
 	
 	// proxy version!
-	const VERSION = '3.0.0';
+	const VERSION = '3.0.3';
+	
+	private $dispatcher;
 	
 	private $request;
 	private $response;
-	private $dispatcher;
 	
+	private $output_buffering = true;
 	private $output_buffer = '';
 	
 	public function __construct(){
 		$this->dispatcher = new EventDispatcher();
+	}
+	
+	public function setOutputBuffering($output_buffering){
+		$this->output_buffering = $output_buffering;
 	}
 	
 	private function header_callback($ch, $headers){
@@ -46,8 +52,11 @@ class Proxy {
 			
 		} else {
 		
+			// this is hacky but until anyone comes up with a better way...
+			$event = new ProxyEvent(array('request' => $this->request, 'response' => $this->response, 'proxy' => &$this));
+			
 			// this is the end of headers - last line is always empty - notify the dispatcher about this
-			$this->dispatcher->dispatch('request.sent', new ProxyEvent(array('request' => $this->request, 'response' => $this->response)));
+			$this->dispatcher->dispatch('request.sent', $event);
 		}
 		
 		return strlen($headers);
@@ -62,8 +71,10 @@ class Proxy {
 			'data' => $str
 		)));
 		
-		// do we need to buffer or not?
-		$this->output_buffer .= $str;
+		// Do we buffer this piece of data for later output or not?
+		if($this->output_buffering){
+			$this->output_buffer .= $str;
+		}
 		
 		return $len;
 	}
@@ -133,6 +144,9 @@ class Proxy {
 		
 		// we have output waiting in the buffer?
 		$this->response->setContent($this->output_buffer);
+		
+		// saves memory I would assume?
+		$this->output_buffer = null;
 		
 		$this->dispatcher->dispatch('request.complete', new ProxyEvent(array('request' => $this->request, 'response' => $this->response)));
 		

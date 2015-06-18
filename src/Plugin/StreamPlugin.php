@@ -22,6 +22,9 @@ class StreamPlugin extends AbstractPlugin {
 		
 			$this->stream = true;
 			$event['response']->sendHeaders();
+			
+			// Tell proxy not to buffer this
+			$event['proxy']->setOutputBuffering(false);
 		}
 	}
 	
