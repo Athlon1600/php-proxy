@@ -9,15 +9,15 @@ class HeaderRewritePlugin extends AbstractPlugin {
 
 	function onBeforeRequest(ProxyEvent $event){
 		
-		// tell target website that we only accept plain text
-		$event['request']->headers->remove('accept-encoding');
+		// tell target website that we only accept plain text without any transformations
+		$event['request']->headers->set('accept-encoding', 'identity');
 
 		// mask proxy referer
 		$event['request']->headers->remove('referer');
 	}
 	
 	function onHeadersReceived(ProxyEvent $event){
-	
+
 		// so stupid... onCompleted won't be called on "streaming" responses
 		$response = $event['response'];
 		$request_url = $event['request']->getUri();
@@ -39,8 +39,9 @@ class HeaderRewritePlugin extends AbstractPlugin {
 		}
 		
 		// TODO: convert this to a whitelist rather than a blacklist
-		$remove = array('age', 'vary', 'expires', 'transfer-encoding', 'content-encoding', 'x-frame-options', 'x-xss-protection', 'x-content-type-options', 'etag');
-		
+		// we need content-enconding (in case server refuses to serve it in plain text) whitelisted
+		$remove = array('age', 'vary', 'expires', 'transfer-encoding', 'x-frame-options', 'x-xss-protection', 'x-content-type-options', 'etag');	
+	
 		foreach($remove as $r){
 			$response->headers->remove($r);
 		}
