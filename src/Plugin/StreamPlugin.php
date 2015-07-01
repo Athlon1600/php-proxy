@@ -17,8 +17,11 @@ class StreamPlugin extends AbstractPlugin {
 		$content_type = $event['response']->headers->get('content-type');
 		$content_type = clean_content_type($content_type);
 		
-		// output immediately as it's being streamed or buffer everything until the end?
-		if($content_type && !in_array($content_type, $this->output_buffer_types)){
+		// how big of data can we expect?
+		$content_length = $event['response']->headers->get('content-length');
+		
+		// we stream if content is not of "text" content-type or if its size exceeds 5 megabytes
+		if(!in_array($content_type, $this->output_buffer_types) || $content_length > 5000000){
 		
 			$this->stream = true;
 			$event['response']->sendHeaders();
@@ -40,7 +43,7 @@ class StreamPlugin extends AbstractPlugin {
 	// and every preg_replace which crashes PHP with "out of memory" errors.
 	public function onCompleted(ProxyEvent $event){
 	
-		// if this was a streaming response then exit immediately
+		// if this was a streaming response then exit the script immediately
 		if($this->stream){
 			exit;
 		}
