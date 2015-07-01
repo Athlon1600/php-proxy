@@ -7,106 +7,105 @@ use Proxy\Event\ProxyEvent;
 
 class CookiePlugin extends AbstractPlugin {
 
-	const COOKIE_PREFIX = 'pc_';
+	const COOKIE_PREFIX = 'pc';
 	
 	public function onBeforeRequest(ProxyEvent $event){
 	
 		$request = $event['request'];
 		
-		// rewrite the headers sent from the user
+		// cookie sent by the browser to the server
 		$http_cookie = $request->headers->get("cookie");
 		
-		// remove
+		// remove old cookie header and rewrite it
 		$request->headers->remove("cookie");
-
+		
+		/*
+			When the user agent generates an HTTP request, the user agent MUST NOT attach more than one Cookie header field.
+			http://tools.ietf.org/html/rfc6265#section-5.4
+		*/
+		$send_cookies = array();
+		
+		// extract "proxy cookies" only
+		// A Proxy Cookie would have  the following name: COOKIE_PREFIX_domain-it-belongs-to__cookie-name
 		if(preg_match_all('@pc_(.+?)__(.+?)=([^;]+)@', $http_cookie, $matches, PREG_SET_ORDER)){
 		
 			foreach($matches as $match){
 			
-				$domain = str_replace("_", ".", $match[1]);
+				$cookie_name = $match[2];
+				$cookie_value = $match[3];
+				$cookie_domain = str_replace("_", ".", $match[1]);
 				
-				$data['name'] = $match[2];
-				$data['value'] = $match[3];
-				$data['domain'] = $domain;
-				
+				// what is the domain or our current URL?
 				$host = parse_url($request->getUri(), PHP_URL_HOST);
 				
 				// does this cookie belong to this domain?
-				if(strpos($host, $domain) !== false){
-				
-				//var_dump($data);
-				
-					//$request->headers->set('cookie', $data['name'].'='.$data['value'], false);
+				// sometimes domain begins with a DOT indicating all subdomains - deprecated but still in use on some servers...
+				if(strpos($host, $cookie_domain) !== false){
+					$send_cookies[] = $cookie_name.'='.$cookie_value;
 				}
 			}
 		}
+		
+		// do we have any cookies to send?
+		if($send_cookies){
+			$request->headers->set('cookie', implode("; ", $send_cookies));
+		}
 	}
 	
-	// rewrite set-cookie header to something else
+	// cookies received from a target server via set-cookie should be rewritten
 	public function onHeadersReceived(ProxyEvent $event){
 	
-		// save cookies received from destination server
-		//extract($event);
-		
 		$request = $event['request'];
 		$response = $event['response'];
 		
-		// does our response send any cookies?
-		$cookies = $response->headers->get('set-cookie');
+		// does the response send any cookies?
+		$set_cookie = $response->headers->get('set-cookie');
 		
-		if($cookies){
+		if($set_cookie){
 		
 			// remove set-cookie header and reconstruct it differently
 			$response->headers->remove('set-cookie');
 			
-			// loop through each set-cookie
-			foreach( (array)$cookies as $cookie_str){
+			// loop through each set-cookie line
+			foreach( (array)$set_cookie as $line){
 			
-			/*
-				try {
+				// parse cookie data as array from header line
+				$cookie = $this->parse_cookie($line, $request->getUri());
 				
-					// valid instance of Cookie will hopefully be returned
-					$cookie = $this->parse_cookie($cookie_str, $request->getUri());
-					
-					// construct our own cookie!!!!
-					$name = 'pc_'.str_replace(".", "_", $cookie->getDomain()).'__'.$cookie->getName();
-					$proxy_cookie = new Cookie($name, $cookie->getValue(), $cookie->getExpiresTime());
-					
-					// pass our new cookie to the client!!!
-					$response->headers->setCookie($proxy_cookie);
+				// construct a "proxy cookie" whose name includes the domain to which this cookie belongs to
+				// replace dots with underscores as cookie name can only contain alphanumeric and underscore
+				$cookie_name = sprintf("%s_%s__%s", self::COOKIE_PREFIX, str_replace('.', '_', $cookie['domain']), $cookie['name']);
 				
-				} catch (InvalidArgumentException $ex){
-					//var_dump($ex->getMessage());
-				}
-				
-				*/
-				
+				// append a simple name=value cookie to the header - no expiration date means that the cookie will be a session cookie
+				$event['response']->headers->set('set-cookie', $cookie_name.'='.$cookie['value'], false);
 			}
-		}	
+		}
 	}
 	
 	// adapted from browserkit
-	private function parse_cookie($cookie_str, $url){
-	
+	private function parse_cookie($line, $url){
+
 		$host = parse_url($url, PHP_URL_HOST);
 		
 		$data = array(
 			'name' => '',
 			'value' => '',
-			'expire' => 0,
-			'path' => '/',
 			'domain' => $host,
+			'path' => '/',
+			'expires' => 0,
 			'secure' => false,
 			'httpOnly' => true
 		);
 		
-		// there should be at least one name=value pair
-		$components = array_filter(array_map('trim', explode(';', $cookie_str)));
+		$line = preg_replace('/^Set-Cookie2?: /i', '', trim($line));
 		
-		foreach($components as $index => $comp){
+		// there should be at least one name=value pair
+		$pairs = array_filter(array_map('trim', explode(';', $line)));
+		
+		foreach($pairs as $index => $comp){
 		
 			$parts = explode('=', $comp, 2);
-			$key = trim($parts[0]);
+			$key = trim(strtolower($parts[0]));
 			
 			if(count($parts) == 1){
 			
@@ -126,11 +125,8 @@ class CookiePlugin extends AbstractPlugin {
 			}
 		}
 		
-		extract($data);
-		
-		return null;//new Cookie($name, $value, $expire, $path, $domain, $secure, $httpOnly);
+		return $data;
 	}
-
 }
 
 ?>

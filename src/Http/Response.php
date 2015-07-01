@@ -103,8 +103,9 @@ class Response {
 			
 			$values = is_array($value) ? $value : array($value);
 			
+			// false = do not replace previous identical header
 			foreach($values as $value){
-				header("{$name}: {$value}");
+				header("{$name}: {$value}", false);
 			}
 		}
 	}

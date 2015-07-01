@@ -36,8 +36,8 @@ class StreamPlugin extends AbstractPlugin {
 		}
 	}
 	
-	// VERY IMPORTANT!!!! Otherwise that huge piece of data from a large video or whatever will be sent through every plugin, 
-	// and going through every preg_replace which crashes PHP with "out of memory" errors.
+	// VERY IMPORTANT!!!! Otherwise that huge piece of data from a large video or whatever will be passed through every plugin, 
+	// and every preg_replace which crashes PHP with "out of memory" errors.
 	public function onCompleted(ProxyEvent $event){
 	
 		// if this was a streaming response then exit immediately

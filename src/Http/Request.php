@@ -144,12 +144,16 @@ class Request {
 		$headers = $this->headers->all();
 		
 		// Sort headers by name
-		ksort($headers);
+		//ksort($headers);
 		
 		// Turn this into name=value pairs
 		foreach($headers as $name => $values){
-			$name = implode('-', array_map('ucfirst', explode('-', $name)));
-			$result[] = sprintf("%s: %s", $name, $values);
+		
+			// could be an array if multiple headers are sent with the same name?
+			foreach( (array)$values as $value){
+				$name = implode('-', array_map('ucfirst', explode('-', $name)));
+				$result[] = sprintf("%s: %s", $name, $value);
+			}
 		}
 		
 		return implode("\r\n", $result);
