@@ -19,8 +19,12 @@ class YoutubePlugin extends AbstractPlugin {
 	
 	//s.ytimg.com/yts/jsbin/html5player-en_US-vfl20EdcH/html5player.js
 	
-	*/
+	look for
 	
+	        a.set("mime", encodeURIComponent(b.mimeType.split(";")[0]));
+        c && a.set("signature", tt(c));
+	
+	*/
 	
 	function vn($a, $b){
 		$c = $a[0];
@@ -31,14 +35,20 @@ class YoutubePlugin extends AbstractPlugin {
 	
 	function sig_decipher($sig){
 
-		$a = $this->vn($sig, 12);
-		$a = $this->vn($a, 18);
+		// a.splice(0, b) = given array A, go to position 0 and start removing B number of items
 		
-		$a = substr($a, 1);
+		$sig = $this->vn($sig, 29);
 		
-		$a = $this->vn($a, 60);
+		$sig = strrev($sig);
+		$sig = substr($sig, 1);
 		
-		return $a;
+		$sig = strrev($sig);
+		$sig = $this->vn($sig, 59);
+		
+		$sig = strrev($sig);
+		$sig = $this->vn($sig, 45);
+		
+		return $sig;
     }
 	
 	private function get_youtube_links($html){
@@ -116,7 +126,7 @@ class YoutubePlugin extends AbstractPlugin {
 			$webm_itags = array(43, 44, 46, 100, 102);
 			
 			// find first available mp4 video
-			$mp4_url = $this->find_first_available($links, $mp4_itags);
+			$mp4_url = $this->find_first_available($links, $mp4_itags);//$mp4_itags);
 			
 			$player = vid_player($mp4_url, 640, 390, 'mp4');
 			
@@ -130,7 +140,6 @@ class YoutubePlugin extends AbstractPlugin {
 			
 		$response->setContent($output);
 	}
-
 }
 
 ?>

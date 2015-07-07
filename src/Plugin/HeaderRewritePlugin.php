@@ -37,18 +37,38 @@ class HeaderRewritePlugin extends AbstractPlugin {
 		if($code >= 400 && $code <= 600){
 			throw new \Exception("Error accessing resource: {$code} - {$text}");
 		}
+
+		/*
+		$remove = array(
+		'age', 
+		'vary', 
+		'expires', 
+		//'transfer-encoding', 
+		'x-frame-options',
+		'x-xss-protection',
+		'x-content-type-options',
+		'etag');
 		
-		// TODO: convert this to a whitelist rather than a blacklist
-		// we need content-enconding (in case server refuses to serve it in plain text) whitelisted
-		$remove = array('age', 'vary', 'expires', 'transfer-encoding', 'x-frame-options', 'x-xss-protection', 'x-content-type-options', 'etag');	
-	
 		foreach($remove as $r){
 			$response->headers->remove($r);
 		}
+		*/
+		
+		// we need content-enconding (in case server refuses to serve it in plain text)
+		$forward_headers = array('content-type', 'content-length', 'accept-ranges', 'content-range', 'content-disposition', 'location');
+		
+		foreach($response->headers->all() as $name => $value){
+			
+			// is this one of the headers we wish to forward back to the client?
+			if(!in_array($name, $forward_headers)){
+				$response->headers->remove($name);
+			}
+		}
 		
 		// do not ever cache our proxy pages!
-		$response->headers->set("cache-control", "no-store, no-cache, must-revalidate, max-age=0");
+		$response->headers->set("cache-control", "no-cache, no-store, must-revalidate");
 		$response->headers->set("pragma", "no-cache");
+		$response->headers->set("expires", 0);
 	}
 	
 }
