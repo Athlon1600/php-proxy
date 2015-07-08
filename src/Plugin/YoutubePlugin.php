@@ -37,16 +37,12 @@ class YoutubePlugin extends AbstractPlugin {
 
 		// a.splice(0, b) = given array A, go to position 0 and start removing B number of items
 		
-		$sig = $this->vn($sig, 29);
-		
+		$sig = substr($sig, 3);
 		$sig = strrev($sig);
-		$sig = substr($sig, 1);
 		
-		$sig = strrev($sig);
-		$sig = $this->vn($sig, 59);
+		$sig = substr($sig, 3);
 		
-		$sig = strrev($sig);
-		$sig = $this->vn($sig, 45);
+		$sig = $this->vn($sig, 17);
 		
 		return $sig;
     }
