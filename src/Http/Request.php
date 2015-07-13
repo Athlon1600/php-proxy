@@ -116,8 +116,8 @@ class Request {
 	
 	public function setUrl($url){
 	
-		// remove hashtag
-		$url = preg_replace('/#([\w-]*)/', '', $url);
+		// remove hashtag - preg_replace so we don't have to check for its existence first - is it possible preserving hashtag?
+		$url = preg_replace('/#.*/', '', $url);
 		
 		// check if url has any query parameters
 		$query = parse_url($url, PHP_URL_QUERY);

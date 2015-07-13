@@ -54,8 +54,8 @@ class HeaderRewritePlugin extends AbstractPlugin {
 		}
 		*/
 		
-		// we need content-enconding (in case server refuses to serve it in plain text)
-		$forward_headers = array('content-type', 'content-length', 'accept-ranges', 'content-range', 'content-disposition', 'location');
+		// we need content-encoding (in case server refuses to serve it in plain text)
+		$forward_headers = array('content-type', 'content-length', 'accept-ranges', 'content-range', 'content-disposition', 'location', 'set-cookie');
 		
 		foreach($response->headers->all() as $name => $value){
 			

@@ -19,21 +19,20 @@ class DailyMotionPlugin extends AbstractPlugin {
 		
 			$id = $matches[1];
 			
-			$html = file_get_contents("http://www.dailymotion.com/embed/video/{$id}");
+			// this better be available
+			$str = file_get_contents("http://www.dailymotion.com/json/video/{$id}?fields=stream_h264_sd_url,stream_h264_hq_url,stream_h264_url,stream_h264_hd_url");
+			$json = json_decode($str, true);
 			
-			if(preg_match('/stream_h264_ld_url":"([^"]+)"/is', $html, $matches)){
-
-				$url = $matches[1];
-				$url = stripslashes($url); 
-						
+			if($json){
+			
+				$url = $json['stream_h264_sd_url'];
+				
 				$output = preg_replace('#\<div\sclass\=\"dmpi_video_playerv4(.*?)>.*?\<\/div\>#s', 
-			'<div class="dmpi_video_playerv4${1}>'.vid_player($url, 620, 348).'</div>', $output, 1);
-			
-			
+				'<div class="dmpi_video_playerv4${1}>'.vid_player($url, 620, 348).'</div>', $output, 1);
+				
 				$response->setContent($output);
 			}
 		}
-	
 	}
 
 }
