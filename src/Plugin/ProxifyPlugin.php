@@ -4,6 +4,7 @@ namespace Proxy\Plugin;
 
 use Proxy\Plugin\AbstractPlugin;
 use Proxy\Event\ProxyEvent;
+use Proxy\Config;
 
 class ProxifyPlugin extends AbstractPlugin {
 
@@ -102,9 +103,14 @@ class ProxifyPlugin extends AbstractPlugin {
 		
 		$response = $event['response'];
 		$str = $response->getContent();
-
+		
 		// let's remove all frames??
 		$str = preg_replace('@<iframe[^>]+>.*?<\\/iframe>@is', '', $str);
+		
+		// let's replace page titles with something custom
+		if(Config::get('replace_title')){
+			$str = preg_replace('/<title[^>]*>(.*?)<\/title>/ims', '<title>'.Config::get('replace_title').'</title>', $str);
+		}
 		
 		// css
 		$str = preg_replace_callback('@:\s*url\s*\((?:\'|"|)(.*?)(?:\'|"|)\)@im', array($this, 'css_url'), $str);
