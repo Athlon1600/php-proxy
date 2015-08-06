@@ -15,7 +15,7 @@ use Proxy\Http\Response;
 class Proxy {
 	
 	// proxy version!
-	const VERSION = '3.0.3';
+	const VERSION = '3.0.5';
 	
 	private $dispatcher;
 	
@@ -118,35 +118,42 @@ class Proxy {
 		$options[CURLOPT_WRITEFUNCTION] = array($this, 'write_callback');
 		
 		// Notify any listeners that the request is ready to be sent, and this is your last chance to make any modifications.
-		$this->dispatcher->dispatch('request.before_send', new ProxyEvent(array('request' => $this->request)));
+		$this->dispatcher->dispatch('request.before_send', new ProxyEvent(array('request' => $this->request, 'response' => $this->response)));
 		
-		// any plugin might have changed our URL by this point
-		$options[CURLOPT_URL] = $this->request->getUri();
+		// We may not even need to send this request if response is already available somewhere (CachePlugin)
+		if($this->request->params->has('request.complete')){
+			
+			// do nothing?
+		} else {
 		
-		// fill in the rest of cURL options
-		$options[CURLOPT_HTTPHEADER] = explode("\r\n", $this->request->getRawHeaders());
-		$options[CURLOPT_CUSTOMREQUEST] = $this->request->getMethod();
-		$options[CURLOPT_POSTFIELDS] =  $this->request->getRawBody();
-		
-		$ch = curl_init();
-		curl_setopt_array($ch, $options);
-		
-		// fetch the status - if exception if throw any at callbacks, then the error will be supressed
-		$result = @curl_exec($ch);
-		
-		// there must have been an error if at this point
-		if(!$result){
-				
-			$error = sprintf('(%d) %s', curl_errno($ch), curl_error($ch));
-		
-			throw new \Exception($error);
+			// any plugin might have changed our URL by this point
+			$options[CURLOPT_URL] = $this->request->getUri();
+			
+			// fill in the rest of cURL options
+			$options[CURLOPT_HTTPHEADER] = explode("\r\n", $this->request->getRawHeaders());
+			$options[CURLOPT_CUSTOMREQUEST] = $this->request->getMethod();
+			$options[CURLOPT_POSTFIELDS] =  $this->request->getRawBody();
+			
+			$ch = curl_init();
+			curl_setopt_array($ch, $options);
+			
+			// fetch the status - if exception if throw any at callbacks, then the error will be supressed
+			$result = @curl_exec($ch);
+			
+			// there must have been an error if at this point
+			if(!$result){
+					
+				$error = sprintf('(%d) %s', curl_errno($ch), curl_error($ch));
+			
+				throw new \Exception($error);
+			}
+			
+			// we have output waiting in the buffer?
+			$this->response->setContent($this->output_buffer);
+			
+			// saves memory I would assume?
+			$this->output_buffer = null;
 		}
-		
-		// we have output waiting in the buffer?
-		$this->response->setContent($this->output_buffer);
-		
-		// saves memory I would assume?
-		$this->output_buffer = null;
 		
 		$this->dispatcher->dispatch('request.complete', new ProxyEvent(array('request' => $this->request, 'response' => $this->response)));
 		

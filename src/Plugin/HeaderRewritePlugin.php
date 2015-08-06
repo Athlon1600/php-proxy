@@ -37,22 +37,6 @@ class HeaderRewritePlugin extends AbstractPlugin {
 		if($code >= 400 && $code <= 600){
 			throw new \Exception("Error accessing resource: {$code} - {$text}");
 		}
-
-		/*
-		$remove = array(
-		'age', 
-		'vary', 
-		'expires', 
-		//'transfer-encoding', 
-		'x-frame-options',
-		'x-xss-protection',
-		'x-content-type-options',
-		'etag');
-		
-		foreach($remove as $r){
-			$response->headers->remove($r);
-		}
-		*/
 		
 		// we need content-encoding (in case server refuses to serve it in plain text)
 		$forward_headers = array('content-type', 'content-length', 'accept-ranges', 'content-range', 'content-disposition', 'location', 'set-cookie');
