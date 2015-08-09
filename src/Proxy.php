@@ -15,7 +15,7 @@ use Proxy\Http\Response;
 class Proxy {
 	
 	// proxy version!
-	const VERSION = '3.0.5';
+	const VERSION = '3.0.6';
 	
 	private $dispatcher;
 	

@@ -25,6 +25,9 @@ class YoutubePlugin extends AbstractPlugin {
 	
 	//s.ytimg.com/yts/jsbin/html5player-new-en_US-vflnk2PHx/html5player-new.js
 	
+	//s.ytimg.com/yts/jsbin/html5player-new-en_US-vflo_te46/html5player-new.js
+	
+	
 	look for
 	
        c && a.set("signature", tt(c));
@@ -43,13 +46,10 @@ class YoutubePlugin extends AbstractPlugin {
 		// a.splice(0, b) = given array A, go to position 0 and start removing B number of items
 		
 		$sig = strrev($sig);
-		$sig = $this->vn($sig, 32);
-		
-		$sig = substr($sig, 3);
-		$sig = strrev($sig);
-		
+		$sig = substr($sig, 2);
+	
+		$sig = $this->vn($sig, 27);
 		$sig = substr($sig, 1);
-		$sig = strrev($sig);
 
 		return $sig;
     }
