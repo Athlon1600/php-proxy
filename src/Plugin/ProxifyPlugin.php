@@ -50,8 +50,14 @@ class ProxifyPlugin extends AbstractPlugin {
 	}
 
 	private function form_action($matches){
+	
+		// $matches[1] holds single or double quote - whichever was used by webmaster
 		
-		// $matches[1] = " or '
+		// $matches[2] holds form submit URL - can be empty which in that case should be replaced with current URL
+		if(!$matches[2]){
+			$matches[2] = $this->base_url;
+		}
+		
 		$new_action = proxify_url($matches[2], $this->base_url);
 		
 		// what is form method?
@@ -118,7 +124,9 @@ class ProxifyPlugin extends AbstractPlugin {
 		// html
 		$str = preg_replace_callback('@href\s*=\s*(["\'])(.+?)\1@im', array($this, 'html_href'), $str);
 		$str = preg_replace_callback('@src=["|\']([^"\']+)["|\']@i', array($this, 'html_src'), $str);
-		$str = preg_replace_callback('@<form[^>]*action=(["\'])(.+?)\1[^>]*>@i', array($this, 'form_action'), $str);
+		
+		// sometimes form action is empty - which means a postback to the current page
+		$str = preg_replace_callback('@<form[^>]*action=(["\'])(.*?)\1[^>]*>@i', array($this, 'form_action'), $str);
 		
 		$response->setContent($str);
 	}
