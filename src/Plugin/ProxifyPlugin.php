@@ -21,6 +21,10 @@ class ProxifyPlugin extends AbstractPlugin {
 		
 		return ': url(\''.proxify_url($url, $this->base_url).'\')';
 	}
+	
+	private function css_import($matches){
+		return str_replace($matches[2], proxify_url($matches[2], $this->base_url), $matches[0]);
+	}
 
 	private function html_href($matches){
 		
@@ -33,11 +37,7 @@ class ProxifyPlugin extends AbstractPlugin {
 		*/
 		
 		// do we even need to proxify this URL?
-		if(true){
-			return str_replace($url, proxify_url($url, $this->base_url), $matches[0]);
-		}
-		
-		return $matches[0];
+		return str_replace($url, proxify_url($url, $this->base_url), $matches[0]);
 	}
 
 	private function html_src($matches){
@@ -121,12 +121,18 @@ class ProxifyPlugin extends AbstractPlugin {
 		// css
 		$str = preg_replace_callback('@:\s*url\s*\((?:\'|"|)(.*?)(?:\'|"|)\)@im', array($this, 'css_url'), $str);
 		
+		// https://developer.mozilla.org/en-US/docs/Web/CSS/@import
+		// TODO: what about @import directives that are outside <style>?
+		$str = preg_replace_callback('/@import (\'|")(.*?)\1/i', array($this, 'css_import'), $str);
+		
 		// html
 		$str = preg_replace_callback('@href\s*=\s*(["\'])(.+?)\1@im', array($this, 'html_href'), $str);
 		$str = preg_replace_callback('@src=["|\']([^"\']+)["|\']@i', array($this, 'html_src'), $str);
 		
 		// sometimes form action is empty - which means a postback to the current page
 		$str = preg_replace_callback('@<form[^>]*action=(["\'])(.*?)\1[^>]*>@i', array($this, 'form_action'), $str);
+		
+		
 		
 		$response->setContent($str);
 	}
