@@ -30,12 +30,6 @@ class ProxifyPlugin extends AbstractPlugin {
 		
 		$url = $matches[2];
 		
-		/*
-		if(stripos($url, "javascript:") === 0){
-			return $matches[0];
-		}
-		*/
-		
 		// do we even need to proxify this URL?
 		return str_replace($url, proxify_url($url, $this->base_url), $matches[0]);
 	}
@@ -46,7 +40,7 @@ class ProxifyPlugin extends AbstractPlugin {
 			return $matches[0];
 		}
 		
-		return 'src="'.proxify_url($matches[1], $this->base_url).'"';
+		return str_replace($matches[2], proxify_url($matches[2], $this->base_url), $matches[0]);
 	}
 
 	private function form_action($matches){
@@ -82,6 +76,8 @@ class ProxifyPlugin extends AbstractPlugin {
 	public function onBeforeRequest(ProxyEvent $event){
 		
 		$request = $event['request'];
+		
+		//var_dump($request->getUrl()); exit;
 		
 		// check if one of the POST pairs is convertGET - if so, convert this request to GET
 		if($request->post->has('convertGET')){
@@ -128,12 +124,12 @@ class ProxifyPlugin extends AbstractPlugin {
 		// html
 		$str = preg_replace_callback('@href\s*=\s*(["\'])(.+?)\1@im', array($this, 'html_href'), $str);
 		//$str = preg_replace_callback('@src=["|\']([^"\']+)["|\']@i', array($this, 'html_src'), $str);
-		$str = preg_replace_callback('@src=\s*(?:["|\'])?([^ >"\']+)@i', array($this, 'html_src'), $str);
+		$str = preg_replace_callback('@src\s*=\s*(["|\'])(.+?)\1@i', array($this, 'html_src'), $str);
 		
 		// sometimes form action is empty - which means a postback to the current page
 		$str = preg_replace_callback('@<form[^>]*action=(["\'])(.*?)\1[^>]*>@i', array($this, 'form_action'), $str);
 		
-		
+		//$str = str_replace('document.forms[0]', 'document.forms[1]', $str);
 		
 		$response->setContent($str);
 	}

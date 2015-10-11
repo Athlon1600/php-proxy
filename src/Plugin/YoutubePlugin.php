@@ -29,6 +29,8 @@ class YoutubePlugin extends AbstractPlugin {
 	
 	//s.ytimg.com/yts/jsbin/html5player-new-en_US-vfl-OCrLj/html5player-new.js
 	
+	//s.ytimg.com/yts/jsbin/html5player-new-en_US-vflIUNjzZ/html5player-new.js
+	
 	
 	look for
 	
@@ -47,19 +49,18 @@ class YoutubePlugin extends AbstractPlugin {
 
 		// a.splice(0, b) = given array A, go to position 0 and start removing B number of items
 		
-		$sig = $this->vn($sig, 40);
-		$sig = substr($sig, 3);
-		
-		$sig = $this->vn($sig, 53);
-		$sig = $this->vn($sig, 11);
-		
-		$sig = substr($sig, 3);
 		$sig = strrev($sig);
 		$sig = substr($sig, 3);
 		
-		$sig = $this->vn($sig, 16);
 		$sig = strrev($sig);
-
+		$sig = substr($sig, 2);
+		
+		$sig = $this->vn($sig, 62);
+		$sig = $this->vn($sig, 25);
+		
+		$sig = substr($sig, 1);
+		$sig = strrev($sig);
+		
 		return $sig;
     }
 	
