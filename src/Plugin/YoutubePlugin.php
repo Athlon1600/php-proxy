@@ -31,6 +31,8 @@ class YoutubePlugin extends AbstractPlugin {
 	
 	//s.ytimg.com/yts/jsbin/html5player-new-en_US-vflIUNjzZ/html5player-new.js
 	
+	//s.ytimg.com/yts/jsbin/html5player-new-en_US-vflsLAYSi/html5player-new.js
+	
 	
 	look for
 	
@@ -49,17 +51,16 @@ class YoutubePlugin extends AbstractPlugin {
 
 		// a.splice(0, b) = given array A, go to position 0 and start removing B number of items
 		
-		$sig = strrev($sig);
-		$sig = substr($sig, 3);
-		
-		$sig = strrev($sig);
-		$sig = substr($sig, 2);
-		
-		$sig = $this->vn($sig, 62);
-		$sig = $this->vn($sig, 25);
-		
 		$sig = substr($sig, 1);
 		$sig = strrev($sig);
+		
+		$sig = substr($sig, 1);
+		$sig = $this->vn($sig, 56);
+		$sig = $this->vn($sig, 46);
+
+		$sig = substr($sig, 2);
+		$sig = strrev($sig);
+		
 		
 		return $sig;
     }

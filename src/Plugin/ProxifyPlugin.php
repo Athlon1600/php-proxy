@@ -77,8 +77,6 @@ class ProxifyPlugin extends AbstractPlugin {
 		
 		$request = $event['request'];
 		
-		//var_dump($request->getUrl()); exit;
-		
 		// check if one of the POST pairs is convertGET - if so, convert this request to GET
 		if($request->post->has('convertGET')){
 			
