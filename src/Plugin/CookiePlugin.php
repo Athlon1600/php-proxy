@@ -105,7 +105,7 @@ class CookiePlugin extends AbstractPlugin {
 		foreach($pairs as $index => $comp){
 		
 			$parts = explode('=', $comp, 2);
-			$key = trim(strtolower($parts[0]));
+			$key = trim($parts[0]);
 			
 			if(count($parts) == 1){
 			
