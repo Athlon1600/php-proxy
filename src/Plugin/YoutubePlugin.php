@@ -9,61 +9,37 @@ class YoutubePlugin extends AbstractPlugin {
 
 	protected $url_pattern = 'youtube.com';
 	
-	/*
+	// current URL
+	private $youtube_url;
 	
-	How do we extract direct links to YouTube videos?
+	// will return empty if youtube-dl not installed
+	private function youtube_dl(){
 	
-	find html5player.js file that's embedded inside any video page source
-	
-	current js file is located at:
-	
-	//s.ytimg.com/yts/jsbin/html5player-en_US-vfl20EdcH/html5player.js
-	
-	//s.ytimg.com/yts/jsbin/html5player-en_US-vflaxmkJQ/html5player.js
-	
-	http://s.ytimg.com/yts/jsbin/html5player-en_US-vflP7pyW6/html5player.js
-	
-	//s.ytimg.com/yts/jsbin/html5player-new-en_US-vflnk2PHx/html5player-new.js
-	
-	//s.ytimg.com/yts/jsbin/html5player-new-en_US-vflo_te46/html5player-new.js
-	
-	//s.ytimg.com/yts/jsbin/html5player-new-en_US-vfl-OCrLj/html5player-new.js
-	
-	//s.ytimg.com/yts/jsbin/html5player-new-en_US-vflIUNjzZ/html5player-new.js
-	
-	//s.ytimg.com/yts/jsbin/html5player-new-en_US-vflsLAYSi/html5player-new.js
-	
-	
-	look for
-	
-       c && a.set("signature", tt(c));
-	
-	*/
-	
-	function vn($a, $b){
-		$c = $a[0];
-		$a[0] = $a[$b % strlen($a)];
-		$a[$b] = $c;
-		return $a;
+		$result = array();
+		
+		$start = microtime(true);
+		
+		// --get-url
+		// --dump-single-json
+		$cmd = sprintf('youtube-dl -J %s', escapeshellarg($this->youtube_url));
+		exec($cmd, $output, $ret);
+		
+		$end = microtime(true);
+		
+		if($ret == 0){
+		
+			$json = json_decode($output[0], true);
+			
+			// formats
+			$formats = $json['formats'];
+			
+			foreach($formats as $vid){
+				$result[$vid['format_id']] = $vid['url'];
+			}
+		}
+		
+		return $result;
 	}
-	
-	function sig_decipher($sig){
-
-		// a.splice(0, b) = given array A, go to position 0 and start removing B number of items
-		
-		$sig = substr($sig, 1);
-		$sig = strrev($sig);
-		
-		$sig = substr($sig, 1);
-		$sig = $this->vn($sig, 56);
-		$sig = $this->vn($sig, 46);
-
-		$sig = substr($sig, 2);
-		$sig = strrev($sig);
-		
-		
-		return $sig;
-    }
 	
 	private function get_youtube_links($html){
 
@@ -88,9 +64,7 @@ class YoutubePlugin extends AbstractPlugin {
 				} else if(isset($arr['s'])){
 				
 					// this is probably a VEVO/ads video... signature must be decrypted first!
-					$signature = $this->sig_decipher($arr['s']);
-					
-					$url = $url.'&signature='.$signature;
+					return $this->youtube_dl();
 				}
 				
 				$result[$arr['itag']] = $url;
@@ -116,6 +90,8 @@ class YoutubePlugin extends AbstractPlugin {
 	
 	public function onCompleted(ProxyEvent $event){
 	
+		$this->youtube_url = $event['request']->getUrl();
+		
 		$response = $event['response'];
 		$output = $response->getContent();
 		
