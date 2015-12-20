@@ -8,6 +8,9 @@
 		"ext-curl": "*",
 		"symfony/event-dispatcher": "~2.6"
 	},
+	"suggest": {
+		"predis/predis": "For caching purposes"
+	},
 	"autoload": {
 		"psr-4": {
 			"Proxy\\": "src/"
