@@ -104,7 +104,7 @@ class ProxifyPlugin extends AbstractPlugin {
 		$response = $event['response'];
 		$str = $response->getContent();
 		
-		// let's remove all frames??
+		// let's remove all frames?? does not protect against the frames created dynamically via javascript
 		$str = preg_replace('@<iframe[^>]+>.*?<\\/iframe>@is', '', $str);
 		
 		// let's replace page titles with something custom

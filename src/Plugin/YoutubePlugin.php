@@ -47,8 +47,6 @@ class YoutubePlugin extends AbstractPlugin {
 		
 			$parts = explode(",", $matches[1]);
 			
-			//var_dump($parts); exit;
-			
 			foreach($parts as $p){
 				$query = str_replace('\u0026', '&', $p);
 				parse_str($query, $arr);
@@ -94,6 +92,9 @@ class YoutubePlugin extends AbstractPlugin {
 		
 		$response = $event['response'];
 		$output = $response->getContent();
+		
+		// remove top banner that's full of ads
+		$output = element_remove("header", $output);
 		
 		// do this on all youtube pages
 		$output = preg_replace('@masthead-positioner">@', 'masthead-positioner" style="position:static;">', $output, 1);
