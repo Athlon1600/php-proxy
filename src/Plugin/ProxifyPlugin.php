@@ -10,7 +10,6 @@ class ProxifyPlugin extends AbstractPlugin {
 
 	private $base_url = '';
 	
-	// TODO: relative urls ../fonts/base/TheSans_LT_TT4i.svg
 	private function css_url($matches){
 	
 		$url = trim($matches[1]);
@@ -104,6 +103,13 @@ class ProxifyPlugin extends AbstractPlugin {
 		$response = $event['response'];
 		$str = $response->getContent();
 		
+		$content_type = $response->headers->get('content-type');
+		
+		// ugly hack but should fix most problems temporarily
+		if($content_type == 'text/javascript' || $content_type == 'application/javascript'){
+			return;
+		}
+		
 		// let's remove all frames?? does not protect against the frames created dynamically via javascript
 		$str = preg_replace('@<iframe[^>]+>.*?<\\/iframe>@is', '', $str);
 		
@@ -113,7 +119,7 @@ class ProxifyPlugin extends AbstractPlugin {
 		}
 		
 		// css
-		$str = preg_replace_callback('@:\s*url\s*\((?:\'|"|)(.*?)(?:\'|"|)\)@im', array($this, 'css_url'), $str);
+		$str = preg_replace_callback('@url\s*\((?:\'|"|)(.*?)(?:\'|"|)\)@im', array($this, 'css_url'), $str);
 		
 		// https://developer.mozilla.org/en-US/docs/Web/CSS/@import
 		// TODO: what about @import directives that are outside <style>?
@@ -121,7 +127,6 @@ class ProxifyPlugin extends AbstractPlugin {
 		
 		// html
 		$str = preg_replace_callback('@href\s*=\s*(["\'])(.+?)\1@im', array($this, 'html_href'), $str);
-		//$str = preg_replace_callback('@src=["|\']([^"\']+)["|\']@i', array($this, 'html_src'), $str);
 		$str = preg_replace_callback('@src\s*=\s*(["|\'])(.+?)\1@i', array($this, 'html_src'), $str);
 		
 		// sometimes form action is empty - which means a postback to the current page
