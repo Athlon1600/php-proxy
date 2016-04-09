@@ -18,7 +18,7 @@ class ProxifyPlugin extends AbstractPlugin {
 			return $matches[0];
 		}
 		
-		return ': url(\''.proxify_url($url, $this->base_url).'\')';
+		return str_replace($matches[1], proxify_url($matches[1], $this->base_url), $matches[0]);
 	}
 	
 	private function css_import($matches){
@@ -111,15 +111,17 @@ class ProxifyPlugin extends AbstractPlugin {
 		}
 		
 		// let's remove all frames?? does not protect against the frames created dynamically via javascript
-		$str = preg_replace('@<iframe[^>]+>.*?<\\/iframe>@is', '', $str);
+		$str = preg_replace('@<iframe[^>]*>[^<]*<\\/iframe>@is', '', $str);
 		
 		// let's replace page titles with something custom
 		if(Config::get('replace_title')){
 			$str = preg_replace('/<title[^>]*>(.*?)<\/title>/ims', '<title>'.Config::get('replace_title').'</title>', $str);
 		}
 		
-		// css
-		$str = preg_replace_callback('@\Wurl\s*\((?:\'|"|)(.*?)(?:\'|"|)\)@im', array($this, 'css_url'), $str);
+		/* css
+		if {1} is not there then youtube breaks for some reason
+		*/
+		$str = preg_replace_callback('@[^a-z]{1}url\s*\((?:\'|"|)(.*?)(?:\'|"|)\)@im', array($this, 'css_url'), $str);
 		
 		// https://developer.mozilla.org/en-US/docs/Web/CSS/@import
 		// TODO: what about @import directives that are outside <style>?

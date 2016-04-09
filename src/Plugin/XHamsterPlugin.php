@@ -13,7 +13,7 @@ class XHamsterPlugin extends AbstractPlugin {
 
 		$file = false;
 		
-		if(preg_match('@mp4\'\s*file="(.*?)"@m', $html, $matches)){
+		if(preg_match("/file: '([^']+)'/", $html, $matches)){
 			$file = rawurldecode($matches[1]);
 		} else if(preg_match("@srv=&file=([^&]+)@s", $html, $matches)){
 			$file = rawurldecode($matches[1]);
@@ -21,22 +21,41 @@ class XHamsterPlugin extends AbstractPlugin {
 		
 		return $file;
 	}
+	
+	private function img_sprite($matches){
+		return str_replace($matches[1], proxify_url($matches[1], $matches[1]), $matches[0]);
+	}
 
 	public function onCompleted(ProxyEvent $event){
 	
 		$response = $event['response'];
 		$content = $response->getContent();
 		
+		// remove ts_popunder stuff
+		$content = preg_replace('/<script[^>]*no-popunder[^>]*><\/script>/m', '', $content);
+		
+		// remove analytics
+		// <script[^>]*>[^<]*<\/script>
+		$content = preg_replace('/<script[^<]*google-analytics\.com[^<]*<\/script>/im', '', $content);
+		
+		$content = preg_replace_callback('/<img[^>]*sprite=\'(.*?)\'/im', array($this, 'img_sprite'), $content);
+		
+		// are we on a video page?
 		$vid = $this->find_video($content);
 		
-		// we must be on a video page?
+		//var_dump($vid);
+		
 		if($vid){
-						
-			$content = preg_replace("@<div id='playerSwf'>.*?loader.*?<\/div>.*?<\/div>.*?<\/div>@s", 
-			"<div id='playerSwf'>".vid_player($vid, 638, 505)."</div>", $content);
-	
-			$response->setContent($content);	
+		
+			$player_swf = element_find("playerSwf", $content);
+			
+			if($player_swf){
+				$content = substr_replace($content, 
+				"<div id='playerSwf'>".vid_player($vid, 638, 504)."</div>", $player_swf[0], $player_swf[1] - $player_swf[0]); 
+			}
 		}
+		
+		$response->setContent($content);
 	}
 }
 
