@@ -119,7 +119,7 @@ class ProxifyPlugin extends AbstractPlugin {
 		}
 		
 		// css
-		$str = preg_replace_callback('@url\s*\((?:\'|"|)(.*?)(?:\'|"|)\)@im', array($this, 'css_url'), $str);
+		$str = preg_replace_callback('@\Wurl\s*\((?:\'|"|)(.*?)(?:\'|"|)\)@im', array($this, 'css_url'), $str);
 		
 		// https://developer.mozilla.org/en-US/docs/Web/CSS/@import
 		// TODO: what about @import directives that are outside <style>?
