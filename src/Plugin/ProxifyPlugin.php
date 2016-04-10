@@ -35,7 +35,7 @@ class ProxifyPlugin extends AbstractPlugin {
 
 	private function html_src($matches){
 
-		if(stripos(trim($matches[1]), 'data:') === 0){
+		if(stripos(trim($matches[2]), 'data:') === 0){
 			return $matches[0];
 		}
 		

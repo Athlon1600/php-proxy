@@ -7,21 +7,39 @@ use Proxy\Event\ProxyEvent;
 
 class RedTubePlugin extends AbstractPlugin {
 
+	private function data_src($matches){
+		return '<img src="'.$matches[1].'">';
+	}
+	
 	public function onCompleted(ProxyEvent $event){
 	
 		$output = $event['response']->getContent();
-	
-		if(preg_match('@video_url=([^&]+)@', $output, $matches)){
 		
-			$vid_url = rawurldecode($matches[1]);
-			
-			$player = vid_player($vid_url, 650, 365);
-					
-			$output = preg_replace('@<div id="redtube_flv_player"(.*?)>.*?<noscript>.*?<\/noscript>.*?<\/div>@s', 
-			'<div id="redtube_flv_player"$1>'.$player.'</div>', $output);
-			
-			$event['response']->setContent($output);
+		// preload images
+		$output = preg_replace_callback('/<img[^>]+data-src="([^"]+)"[^>]*>/', array($this, 'data_src'), $output);
+
+		// remove ads
+		$output = preg_replace('/<script data-cfasync.*?<\/script>/sm', '', $output);
+		
+		// extract all videos
+		preg_match_all('/"([0-9]+)":"([^"]*mp4[^"]*)"/im', $output, $matches, PREG_SET_ORDER);
+		
+		// by default, HD videos go first - we don't want that
+		$matches = array_reverse($matches);
+		
+		if($matches){
+		
+			$player = element_find("redtube_flv_player", $output);
+
+			if($player){
+				$url = rawurldecode(stripslashes($matches[0][2]));
+				
+				$output = substr_replace($output, 
+				'<div class="redtube-flv-player">'.vid_player($url, 973, 547, 'mp4').'</div>', $player[0], $player[1] - $player[0]);
+			}
 		}
+		
+		$event['response']->setContent($output);
 	}
 
 }
