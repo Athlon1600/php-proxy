@@ -21,6 +21,11 @@ class ProxifyPlugin extends AbstractPlugin {
 		return str_replace($matches[1], proxify_url($matches[1], $this->base_url), $matches[0]);
 	}
 	
+	/*
+	
+	this.params.logoImg&&(e="background-image: url("+this.params.logoImg+")")
+	
+	*/
 	private function css_import($matches){
 		return str_replace($matches[2], proxify_url($matches[2], $this->base_url), $matches[0]);
 	}
@@ -94,6 +99,12 @@ class ProxifyPlugin extends AbstractPlugin {
 			$request->prepare();
 		}
 	}
+
+	/*
+	TODO:
+			$input = preg_replace('#<meta[^>]*name=["\'](title|description|keywords)["\'][^>]*>#is', '', $input, 3);
+            $input = preg_replace('#<link[^>]*rel=["\'](icon|shortcut icon)["\'][^>]*>#is', '', $input, 2);
+	*/
 	
 	public function onCompleted(ProxyEvent $event){
 	
@@ -106,7 +117,7 @@ class ProxifyPlugin extends AbstractPlugin {
 		$content_type = $response->headers->get('content-type');
 		
 		// ugly hack but should fix most problems temporarily
-		if($content_type == 'text/javascript' || $content_type == 'application/javascript'){
+		if($content_type == 'text/javascript' || $content_type == 'application/javascript' || $content_type == 'application/x-javascript'){
 			return;
 		}
 		
@@ -127,8 +138,8 @@ class ProxifyPlugin extends AbstractPlugin {
 		// TODO: what about @import directives that are outside <style>?
 		$str = preg_replace_callback('/@import (\'|")(.*?)\1/i', array($this, 'css_import'), $str);
 		
-		// html
-		$str = preg_replace_callback('@href\s*=\s*(["\'])(.+?)\1@im', array($this, 'html_href'), $str);
+		// html .*? just in case href is empty...
+		$str = preg_replace_callback('@href\s*=\s*(["\'])(.*?)\1@im', array($this, 'html_href'), $str);
 		$str = preg_replace_callback('@src\s*=\s*(["|\'])(.+?)\1@i', array($this, 'html_src'), $str);
 		
 		// sometimes form action is empty - which means a postback to the current page

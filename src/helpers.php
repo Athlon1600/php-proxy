@@ -219,7 +219,7 @@ function element_find($id, $html){
 		$tag_name = $matches[1][0];
 		$tag_len = strlen($tag_name);
 		
-		$run_count = 100;
+		$run_count = 300;
 		$start = $element_start;
 		
 		// "unclosed" <tag elements we found so far...
