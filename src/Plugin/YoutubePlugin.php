@@ -5,6 +5,8 @@ namespace Proxy\Plugin;
 use Proxy\Plugin\AbstractPlugin;
 use Proxy\Event\ProxyEvent;
 
+use Proxy\Html;
+
 class YoutubePlugin extends AbstractPlugin {
 
 	protected $url_pattern = 'youtube.com';
@@ -94,7 +96,7 @@ class YoutubePlugin extends AbstractPlugin {
 		$output = $response->getContent();
 		
 		// remove top banner that's full of ads
-		$output = element_remove("header", $output);
+		$output = Html::remove("#header", $output);
 		
 		// do this on all youtube pages
 		$output = preg_replace('@masthead-positioner">@', 'masthead-positioner" style="position:static;">', $output, 1);
@@ -122,11 +124,13 @@ class YoutubePlugin extends AbstractPlugin {
 			$player = vid_player($mp4_url, 640, 390, 'mp4');
 			
 			// this div blocks our player controls
-			$output = str_replace('<div id="theater-background" class="player-height"></div>', '', $output);
+			$output = Html::remove("#theater-background", $output);
 			
 			// replace youtube player div block with our own
-			$output = preg_replace('#<div id="player-api"([^>]*)>.*?<div id="watch-queue-mole"#s', 
-			'<div id="player-api"$1>'.$player.'</div><div id="watch-queue-mole"', $output, 1);
+			$output = Html::replace_inner("#player-api", $player, $output);
+			
+			// there is no need for that
+			$output = Html::remove_scripts($output);
 		}
 			
 		$response->setContent($output);

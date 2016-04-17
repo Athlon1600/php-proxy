@@ -104,6 +104,18 @@ class ProxifyPlugin extends AbstractPlugin {
 	TODO:
 			$input = preg_replace('#<meta[^>]*name=["\'](title|description|keywords)["\'][^>]*>#is', '', $input, 3);
             $input = preg_replace('#<link[^>]*rel=["\'](icon|shortcut icon)["\'][^>]*>#is', '', $input, 2);
+			
+					# Remove and record a <base> href
+		$input = preg_replace_callback('#<base href\s*=\s*([\\\'"])?((?(1)(?(?<=")[^"]{1,2048}|[^\\\']{1,2048})|[^\s"\\\'>]{1,2048}))(?(1)\\1|)[^>]*>#i', 'html_stripBase', $input, 1);
+		
+				# Proxy url= values in meta redirects
+		$input = preg_replace_callback('#content\s*=\s*(["\\\'])?[0-9]+\s*;\s*url=([\\\'"]|&\#39;)?((?(?<=")[^"]+|(?(?<=\\\')[^\\\']+|[^\\\'" >]+)))(?(2)\\2|)(?(1)\\1|)#i', 'html_metaRefresh', $input, 1);
+		
+		
+		
+		# Process forms
+		$input = preg_replace_callback('#<form([^>]*)>(.*?)</form>#is', 'html_form', $input);
+		
 	*/
 	
 	public function onCompleted(ProxyEvent $event){

@@ -1,7 +1,7 @@
 {
 	"name": "athlon1600/php-proxy",
 	"type": "library",
-	"version": "3.0.6",
+	"version": "4.0.1",
 	"keywords": ["php proxy", "proxy script", "php web proxy", "web proxy"],
 	"homepage": "https://www.php-proxy.com/",
 	"require": {
