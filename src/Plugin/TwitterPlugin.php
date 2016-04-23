@@ -5,6 +5,8 @@ namespace Proxy\Plugin;
 use Proxy\Plugin\AbstractPlugin;
 use Proxy\Event\ProxyEvent;
 
+use Proxy\Html;
+
 class TwitterPlugin extends AbstractPlugin {
 
 	protected $url_pattern = 'twitter.com';
@@ -16,7 +18,7 @@ class TwitterPlugin extends AbstractPlugin {
 		$content = $response->getContent();
 		
 		// remove all javascript
-		$content = preg_replace('#<script(.*?)>(.*?)</script>#is', '', $content);
+		$content = Html::remove_scripts($content);
 			
 		$response->setContent($content);
 	}

@@ -42,14 +42,18 @@ function in_arrayi($needle, $haystack){
 }
 
 // regular array_merge does not work if arrays have numeric keys...
-function array_merge_custom()
-{
-    $array      = array();
-    $arguments  = func_get_args();
-    foreach($arguments as $args)
-        foreach($args as $key => $value)
-            $array[$key] = $value;
-    return $array;
+function array_merge_custom(){
+	
+	$arr = array();
+	$args = func_get_args();
+
+	foreach( (array)$args as $arg){
+		foreach( (array)$arg as $key => $value){
+			$arr[$key] = $value;
+		}
+	}
+	
+	return $arr;
 }
 
 // rotate each string character based on corresponding ascii values from some key
@@ -206,72 +210,6 @@ function vid_player($url, $width, $height, $extension = false){
 	}
 	
 	return $html;
-}
-
-function element_find($id, $html){
-
-	if(preg_match('/<(\w+)[^>]+id="'.$id.'"/is', $html, $matches, PREG_OFFSET_CAPTURE)){
-	
-		$element_start = $matches[0][1];
-		$element_end = 0;
-		
-		// tag stuff
-		$tag_name = $matches[1][0];
-		$tag_len = strlen($tag_name);
-		
-		$run_count = 300;
-		$start = $element_start;
-		
-		// "unclosed" <tag elements we found so far...
-		$open_count = 0;
-		
-		while($run_count > 0){
-		
-			$open_tag = strpos($html, "<{$tag_name}", $start);
-			$close_tag = strpos($html, "</{$tag_name}", $start);
-
-			// we encountered the start of another tag...
-			if($open_tag < $close_tag){
-				$open_count++;
-				$start = $open_tag + $tag_len + 1;
-			// we encountered a closed tag first
-			} else if($close_tag < $open_tag){
-				$open_count--;
-				$start = $close_tag + $tag_len + 2;
-			}
-			
-			if($open_count == 0){
-				$element_end = $close_tag + $tag_len + 3;
-				break;
-			}
-			
-			$run_count--;
-		}
-		
-		// something went wrong... don't bother returning anything
-		if($run_count == 0){
-			return false;
-		}
-		
-		return array($element_start, $element_end);
-	}
-	
-	return false;
-}
-
-function element_remove($id, $html){
-
-	$arr = element_find($id, $html);
-	
-	if($arr){
-		return str_remove($html, $arr[0], $arr[1]);
-	}
-	
-	return $html;
-}
-
-function str_remove($str, $start, $end){
-	return substr_replace($str, "", $start, $end-$start);
 }
 
 function rel2abs($rel, $base)
