@@ -5,6 +5,8 @@ namespace Proxy\Plugin;
 use Proxy\Plugin\AbstractPlugin;
 use Proxy\Event\ProxyEvent;
 
+use Proxy\Html;
+
 class XVideosPlugin extends AbstractPlugin {
 
 	protected $url_pattern = 'xvideos.com';
@@ -17,11 +19,10 @@ class XVideosPlugin extends AbstractPlugin {
 		if(preg_match('@flv_url=([^&]+)@', $html, $matches)){
 		
 			$flv_url = rawurldecode($matches[1]);
+			$player = vid_player($flv_url, 938, 476);
 			
-			//
-			$data = element_find("video-player-bg", $html);
-
-			$html = substr_replace($html, '<div id="video-player-bg">'.vid_player($flv_url, 938, 476).'</div>', $data[0], $data[1] - $data[0]);
+			// insert our own video player
+			$html = Html::replace_inner("#video-player-bg", $player, $html);
 			
 			$response->setContent($html);
 		}

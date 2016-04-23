@@ -5,6 +5,8 @@ namespace Proxy\Plugin;
 use Proxy\Plugin\AbstractPlugin;
 use Proxy\Event\ProxyEvent;
 
+use Proxy\Html;
+
 class RedTubePlugin extends AbstractPlugin {
 
 	private function data_src($matches){
@@ -29,14 +31,13 @@ class RedTubePlugin extends AbstractPlugin {
 		
 		if($matches){
 		
-			$player = element_find("redtube_flv_player", $output);
-
-			if($player){
-				$url = rawurldecode(stripslashes($matches[0][2]));
-				
-				$output = substr_replace($output, 
-				'<div class="redtube-flv-player">'.vid_player($url, 973, 547, 'mp4').'</div>', $player[0], $player[1] - $player[0]);
-			}
+			$video = rawurldecode(stripslashes($matches[0][2]));
+			
+			// generate player
+			$player = vid_player($video, 973, 547, 'mp4');
+			
+			// replace it with our own player
+			$output = Html::replace_inner("#redtube_flv_player", $player, $output);
 		}
 		
 		$event['response']->setContent($output);

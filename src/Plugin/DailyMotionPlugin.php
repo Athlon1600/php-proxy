@@ -5,6 +5,8 @@ namespace Proxy\Plugin;
 use Proxy\Plugin\AbstractPlugin;
 use Proxy\Event\ProxyEvent;
 
+use Proxy\Html;
+
 class DailyMotionPlugin extends AbstractPlugin {
 
 	protected $url_pattern = 'dailymotion.com';
@@ -12,23 +14,23 @@ class DailyMotionPlugin extends AbstractPlugin {
 	public function onCompleted(ProxyEvent $event){
 		
 		$response = $event['response'];
-		$output = $response->getContent();
+		$content = $response->getContent();
 		
 		// http://www.dailymotion.com/json/video/{$id}?fields=stream_h264_sd_url,stream_h264_hq_url,stream_h264_url,stream_h264_hd_url
-		if(preg_match('/"url":"([^"]+mp4[^"]*)"/m', $output, $matches)){
+		if(preg_match('/"url":"([^"]+mp4[^"]*)"/m', $content, $matches)){
 		
-			$url = stripslashes($matches[1]);
+			$video = stripslashes($matches[1]);
 			
-			$player = element_find("player", $output);
-
-			$output = substr_replace($output, 
-			'<div class="dmp_Player-no-keyboard-focus" style="" id="player">'.vid_player($url, 1240, 478).'</div>', $player[0], $player[1] - $player[0]);
+			// generate our own player
+			$player = vid_player($video, 1240, 478);
+			
+			$content = Html::replace_inner("#player", $player, $content);
 		}
 		
 		// too many useless scripts on this site
-		$output = preg_replace('#<script[^>]*>.*?</script>#is', '', $output);
+		$content = Html::remove_scripts($content);
 		
-		$response->setContent($output);
+		$response->setContent($content);
 	}
 
 }
