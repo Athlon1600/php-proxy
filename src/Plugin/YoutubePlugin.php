@@ -128,10 +128,10 @@ class YoutubePlugin extends AbstractPlugin {
 			
 			// replace youtube player div block with our own
 			$output = Html::replace_inner("#player-api", $player, $output);
-			
-			// there is no need for that
-			$output = Html::remove_scripts($output);
 		}
+		
+		// causes too many problems...
+		$output = Html::remove_scripts($output);
 			
 		$response->setContent($output);
 	}
