@@ -4,37 +4,15 @@ use Proxy\Config;
 
 // strip away extra parameters text/html; charset=UTF-8
 function clean_content_type($content_type){
-	return preg_replace('@;.*@', '', $content_type);
+	return trim(preg_replace('@;.*@', '', $content_type));
 }
 
 function is_html($content_type){
-
-	$content_type = clean_content_type($content_type);
-	
-	$text = array(
-		//'text/cmd',
-		//'text/css',
-		//'text/csv',
-		//'text/example',
-		'text/html'
-		//'text/javascript',
-		//'text/plain',
-		//'text/rtf',
-		//'text/vcard',
-		//'text/vnd.abc',
-		//'text/xml'
-	);
-
-	return in_array($content_type, $text);
+	return clean_content_type($content_type) == 'text/html';
 }
 
-function base64_url_encode($input){
-	// = at the end is just padding to make the length of the str divisible by 4
-	return rtrim(strtr(base64_encode($input), '+/', '-_'), '=');
-}
-
-function base64_url_decode($input){
-	return base64_decode(str_pad(strtr($input, '-_', '+/'), strlen($input) % 4, '=', STR_PAD_RIGHT));
+function contains($haystack, $needle){
+	return strpos($haystack, $needle) !== false;
 }
 
 function in_arrayi($needle, $haystack){
@@ -130,32 +108,37 @@ function time_ms(){
 	return round(microtime(true) * 1000);
 }
 
-function contains($haystack, $needle){
-	return strpos($haystack, $needle) !== false;
+function base64_url_encode($input){
+	// = at the end is just padding to make the length of the str divisible by 4
+	return rtrim(strtr(base64_encode($input), '+/', '-_'), '=');
 }
 
-function base64_encrypt($data, $key = false){
-
-	if($key){
-		$data = str_rot_pass($data, $key);
-	} else if(Config::get('encryption_key')){
-		$data = str_rot_pass($data, Config::get('encryption_key'));
-	}
-	
-	return base64_url_encode($data);
+function base64_url_decode($input){
+	return base64_decode(str_pad(strtr($input, '-_', '+/'), strlen($input) % 4, '=', STR_PAD_RIGHT));
 }
 
-function base64_decrypt($data, $key = false){
+function url_encrypt($url, $key = false){
 
-	$data = base64_url_decode($data);
-	
 	if($key){
-		$data = str_rot_pass($data, $key, true);
+		$url = str_rot_pass($url, $key);
 	} else if(Config::get('encryption_key')){
-		$data = str_rot_pass($data, Config::get('encryption_key'), true);
+		$url = str_rot_pass($url, Config::get('encryption_key'));
 	}
 	
-	return $data;
+	return Config::get('url_mode') ? base64_url_encode($url) : rawurlencode($url);
+}
+
+function url_decrypt($url, $key = false){
+
+	$url = Config::get('url_mode') ? base64_url_decode($url) : rawurldecode($url);
+	
+	if($key){
+		$url = str_rot_pass($url, $key, true);
+	} else if(Config::get('encryption_key')){
+		$url = str_rot_pass($url, Config::get('encryption_key'), true);
+	}
+	
+	return $url;
 }
 
 // www.youtube.com TO proxy-app.com/index.php?q=encrypt_url(www.youtube.com)
@@ -164,10 +147,11 @@ function proxify_url($url, $base_url = ''){
 	$url = htmlspecialchars_decode($url);
 	
 	if($base_url){
+		$base_url = add_http($base_url);
 		$url = rel2abs($url, $base_url);
 	}
 	
-	return app_url().'?q='.base64_encrypt($url);
+	return app_url().'?q='.url_encrypt($url);
 }
 
 function vid_player($url, $width, $height, $extension = false){
