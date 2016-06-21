@@ -152,7 +152,7 @@ class ProxifyPlugin extends AbstractPlugin {
 		
 		// html .*? just in case href is empty...
 		$str = preg_replace_callback('@href\s*=\s*(["\'])(.*?)\1@im', array($this, 'html_href'), $str);
-		$str = preg_replace_callback('@src\s*=\s*(["|\'])(.+?)\1@i', array($this, 'html_src'), $str);
+		$str = preg_replace_callback('@src\s*=\s*(["|\'])([^\'"]+)\1@i', array($this, 'html_src'), $str);
 		
 		// sometimes form action is empty - which means a postback to the current page
 		$str = preg_replace_callback('@<form[^>]*action=(["\'])(.*?)\1[^>]*>@i', array($this, 'form_action'), $str);
