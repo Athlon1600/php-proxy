@@ -49,6 +49,10 @@ class HeaderRewritePlugin extends AbstractPlugin {
 			}
 		}
 		
+		if(!$response->headers->has('content-disposition')){
+			$response->headers->set('Content-Disposition', 'filename="'.basename($request_url).'"');
+		}
+		
 		// do not ever cache our proxy pages!
 		$response->headers->set("cache-control", "no-cache, no-store, must-revalidate");
 		$response->headers->set("pragma", "no-cache");
