@@ -50,60 +50,72 @@ class Response {
 		504 => 'Gateway Time-out',
 		505 => 'Unsupported Version'
     );
-	
+
+    public $statusCodeGroups = array(
+        1 => 'Informational',
+        2 => 'Success',
+        3 => 'Redirect',
+        4 => 'Client error',
+        5 => 'Server error'
+    );
+
 	public $status;
-	
+
 	public $headers;
-	
+
 	private $content;
-	
+
 	// getHeaderLines
 	public function __construct($content = '', $status = 200, $headers = array()){
-	
+
 		$this->headers = new ParamStore($headers);
-		
+
 		$this->setContent($content);
 		$this->setStatusCode($status);
 	}
-	
+
 	public function setStatusCode($code){
 		$this->status = $code;
 	}
-	
+
 	public function getStatusCode(){
 		return $this->status;
 	}
-	
+
 	public function getStatusText(){
-		return $this->statusCodes[$this->getStatusCode()];
+	    $statusCode = $this->getStatusCode();
+
+        return isset($this->statusCodes[$statusCode])
+            ? $this->statusCodes[$statusCode]
+            : $this->getDefaultStatusText($statusCode);
 	}
-	
+
 	public function setContent($content){
 		$this->content = (string)$content;
 	}
-	
+
 	public function getContent(){
 		return $this->content;
 	}
-	
+
 	public function sendHeaders(){
-	
+
 		if(headers_sent()){
 			return;
 		}
-		
+
 		header(sprintf('HTTP/1.1 %s %s', $this->status, $this->getStatusText()), true, $this->status);
-		
+
 		foreach($this->headers->all() as $name => $value){
-		
+
 			/*
-				Multiple message-header fields with the same field-name MAY be present in a message 
+				Multiple message-header fields with the same field-name MAY be present in a message
 				if and only if the entire field-value for that header field is defined as a comma-separated list
 				http://www.w3.org/Protocols/rfc2616/rfc2616-sec4.html#sec4.2
 			*/
-			
+
 			$values = is_array($value) ? $value : array($value);
-			
+
 			// false = do not replace previous identical header
 			foreach($values as $value){
 				header("{$name}: {$value}", false);
@@ -116,6 +128,13 @@ class Response {
 		echo $this->content;
 	}
 
+    protected function getDefaultStatusText($statusCode){
+        $statusCodeGroup = substr($statusCode, 0, 1);
+
+        return isset($this->statusCodeGroups[$statusCodeGroup])
+            ? $this->statusCodeGroups[$statusCodeGroup]
+            : 'Unknown';
+    }
 }
 
 ?>
