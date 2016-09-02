@@ -11,10 +11,6 @@ function is_html($content_type){
 	return clean_content_type($content_type) == 'text/html';
 }
 
-function contains($haystack, $needle){
-	return strpos($haystack, $needle) !== false;
-}
-
 function in_arrayi($needle, $haystack){
 	return in_array(strtolower($needle), array_map('strtolower', $haystack));
 }

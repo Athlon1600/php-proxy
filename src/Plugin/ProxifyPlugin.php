@@ -32,7 +32,12 @@ class ProxifyPlugin extends AbstractPlugin {
 
 	private function html_href($matches){
 		
-		$url = $matches[2];
+		$url = trim($matches[2]);
+		
+		// do not proxify magnet: links
+		if(strpos($url, "magnet") === 0){
+			return $matches[0];
+		}
 		
 		// do we even need to proxify this URL?
 		return str_replace($url, proxify_url($url, $this->base_url), $matches[0]);
