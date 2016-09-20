@@ -53,7 +53,12 @@ function str_rot_pass($str, $key, $decrypt = false){
 }
 
 function app_url(){
-	return (!empty($_SERVER['HTTPS']) ? 'https://' : 'http://').$_SERVER['HTTP_HOST'].$_SERVER['PHP_SELF'];
+	if(Config::get('app_url')){
+		return Config::get('app_url');
+	}
+	else{
+		return (!empty($_SERVER['HTTPS']) ? 'https://' : 'http://').$_SERVER['HTTP_HOST'].$_SERVER['PHP_SELF'];
+	}
 }
 
 function render_string($str, $vars = array()){
