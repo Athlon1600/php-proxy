@@ -131,11 +131,14 @@ class ProxifyPlugin extends AbstractPlugin {
 		$response = $event['response'];
 		$str = $response->getContent();
 		
-		$content_type = $response->headers->get('content-type');
+		$content_type = strtolower(trim($response->headers->get('content-type')));
 		
 		// DO NOT do any proxification on .js files
-		if($content_type == 'text/javascript' || $content_type == 'application/javascript' || $content_type == 'application/x-javascript'){
-			return;
+		$types = array('text/javascript', 'application/javascript', 'application/x-javascript');
+		foreach($types as $type){
+			if(strpos($content_type, $type) === 0){
+				return;
+			}
 		}
 		
 		// let's remove all frames?? does not protect against the frames created dynamically via javascript
