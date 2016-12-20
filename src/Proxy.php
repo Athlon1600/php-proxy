@@ -25,6 +25,8 @@ class Proxy {
 	private $output_buffering = true;
 	private $output_buffer = '';
 	
+	private $status_found = false;
+	
 	public function __construct(){
 		$this->dispatcher = new EventDispatcher();
 	}
@@ -38,9 +40,11 @@ class Proxy {
 		$parts = explode(":", $headers, 2);
 		
 		// extract status code
-		if(preg_match('/HTTP\/1.\d+ (\d+)/', $headers, $matches)){
-		
+		// if using proxy - we ignore this header: HTTP/1.1 200 Connection established
+		if(preg_match('/HTTP\/1.\d+ (\d+)/', $headers, $matches) && stripos($headers, '200 Connection established') === false){
+			
 			$this->response->setStatusCode($matches[1]);
+			$this->status_found = true;
 		
 		} else if(count($parts) == 2){
 			
@@ -50,7 +54,7 @@ class Proxy {
 			// this must be a header: value line
 			$this->response->headers->set($name, $value, false);
 			
-		} else {
+		} else if($this->status_found){
 		
 			// this is hacky but until anyone comes up with a better way...
 			$event = new ProxyEvent(array('request' => $this->request, 'response' => $this->response, 'proxy' => &$this));
