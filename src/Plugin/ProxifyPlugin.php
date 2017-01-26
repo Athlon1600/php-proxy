@@ -61,18 +61,25 @@ class ProxifyPlugin extends AbstractPlugin {
                 // First extract all valid URLs (regex taken from WordPress.org code)
 		preg_match_all('#\bhttps?://[^\s()<>]+(?:\([\w\d]+\)|([^[:punct:]\s]|/))#', $matches[2], $urls);
 
-                // If URLs are found, replace each URL with proxified URL
-                if($urls[0]){
+                // If there is more than 1 URL, replace each URL with proxified URL
+                if(count($urls[0])>1){
                         $tmp = $matches[2];
 			foreach($urls[0] as $url){
-				if(preg_match('@^http(s)\:\/\/@is', $url)){
+                                // Make sure the URL is valid
+				if(preg_match('@^https?\:\/\/@is', trim($url)) && (!filter_var(trim($url), FILTER_VALIDATE_URL) === false)){
 					$tmp = str_replace($url, proxify_url($url, $this->base_url), $tmp);
                                 }
                         }
+                        // Now return $matches[2] with all URLs proxified
                         return $tmp;
                 }
 
-                // If no http(s):// URLs are found, return $matches[0]
+                // If $matches[2] is a valid URL return it proxified
+                if(preg_match('@^https?\:\/\/@is', trim($matches[2])) && (!filter_var(trim($matches[2]), FILTER_VALIDATE_URL) === false)){
+                        return str_replace($matches[2], proxify_url($matches[2], $this->base_url), $matches[0]);
+                }
+
+                // By default return $matches[0];
                 return $matches[0];
 	}
 	
@@ -196,11 +203,26 @@ class ProxifyPlugin extends AbstractPlugin {
 		// Proxify also URLs\images like this: <img srcset="https://cdn.pixabay.com/photo/2016/12/17/20/13/ice-cubes-1914351__340.jpg 1x, https://cdn.pixabay.com/photo/2016/12/17/20/13/ice-cubes-1914351__480.jpg 2x" 
 		$str = preg_replace_callback('@srcset=(["|\'])(.*?)\1@i', array($this, 'img_src'), $str);
 		
-		// Proxify also URLs\images like this: data-lazy="https://cdn.pixabay.com/photo/2016/10/22/22/37/eyelash-curler-1761855__340.jpg"
-		$str = preg_replace_callback('@srcset=(["|\'])(.*?)\1@i', array($this, 'img_src'), $str);
+		// Proxify also URLs\images like this: autobuffer controls poster="http://cdn5.image.youporn.phncdn.com/m=eaAaaEjb/201701/07/13398857/original/10/XXXXXXX.jpg"></video>
+		$str = preg_replace_callback('@autobuffer\s*controls\s*poster=(["|\'])(.*?)\1@i', array($this, 'img_src'), $str);
+
+                // Proxify also URLs\images like this: itemprop="image" content="http://cdn1b.thumbnails.porntube.com/8/0/1/0/2/0/2/5/4/835x470/25.jpeg"
+		$str = preg_replace_callback('@itemprop=\"image\"\s*content=(["|\'])(.*?)\1@i', array($this, 'img_src'), $str);
 		
-		// Proxify also URLs\images like this: autobuffer controls poster="http://cdn5.image.youporn.phncdn.com/m=eaAaaEjb/201701/07/13398857/original/10/shoplyfter-brunette-teen-strip-searched-fucked-10.jpg"></video>
-		$str = preg_replace_callback('@autobuffer controls poster=(["|\'])(.*?)\1@i', array($this, 'img_src'), $str);
+		// Proxify also URLs\images like this: 
+		// <meta itemprop="embedUrl" content="http://www.porntube.com/">
+		// <meta itemprop="thumbnailUrl" content="http://cdn1b.thumbnails.porntube.com/8/0/1/0/2/0/2/5/4/835x470/25.jpeg">
+		// <meta itemprop="discussionUrl" content="http://www.porntube.com/videos/XXXXXXX_7243400">
+		// <meta itemprop="url" content="http://www.porntube.com/">
+		// <meta itemprop="logo" content="http://www.porntube.com/">
+		// <meta itemprop="embedUrl" content="http://www.porntube.com/">
+		$str = preg_replace_callback('@content=(["|\'])(.*?)\1@i', array($this, 'img_src'), $str);
+
+		// Proxify also URLs\images like this: <img data-master="http://cdn1b.thumbnails.porntube.com/8/0/0/9/5/8/0/1/3/240x180/27.jpeg"
+		$str = preg_replace_callback('@data-master=(["|\'])(.*?)\1@i', array($this, 'img_src'), $str);
+
+		// Proxify also URLs\images like this: <img data-original="http://cdn1b.thumbnails.porntube.com/8/0/0/9/5/8/0/1/3/240x180/27.jpeg"
+		$str = preg_replace_callback('@data-original=(["|\'])(.*?)\1@i', array($this, 'img_src'), $str);
 		
 		// sometimes form action is empty - which means a postback to the current page
 		$str = preg_replace_callback('@<form[^>]*action=(["\'])(.*?)\1[^>]*>@i', array($this, 'form_action'), $str);
