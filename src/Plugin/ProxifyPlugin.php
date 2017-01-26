@@ -166,6 +166,9 @@ class ProxifyPlugin extends AbstractPlugin {
 		*/
 		$str = preg_replace_callback('@src\s*=\s*(["|\'])(.*?)\1@i', array($this, 'html_src'), $str);
 		
+		// Proxify also URLs\Images like this: <img data-thumb="//i.ytimg.com/i/lgRkhTL3_hImCAmdLfDE4g/1.jpg" 
+		$str = preg_replace_callback('@data-thumb=(["|\'])(.*?)\1@i', array($this, 'html_src'), $str);
+		
 		// sometimes form action is empty - which means a postback to the current page
 		$str = preg_replace_callback('@<form[^>]*action=(["\'])(.*?)\1[^>]*>@i', array($this, 'form_action'), $str);
 		
