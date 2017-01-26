@@ -199,6 +199,9 @@ class ProxifyPlugin extends AbstractPlugin {
 		// Proxify also URLs\images like this: data-lazy="https://cdn.pixabay.com/photo/2016/10/22/22/37/eyelash-curler-1761855__340.jpg"
 		$str = preg_replace_callback('@srcset=(["|\'])(.*?)\1@i', array($this, 'img_src'), $str);
 		
+		// Proxify also URLs\images like this: autobuffer controls poster="http://cdn5.image.youporn.phncdn.com/m=eaAaaEjb/201701/07/13398857/original/10/shoplyfter-brunette-teen-strip-searched-fucked-10.jpg"></video>
+		$str = preg_replace_callback('@autobuffer controls poster=(["|\'])(.*?)\1@i', array($this, 'img_src'), $str);
+		
 		// sometimes form action is empty - which means a postback to the current page
 		$str = preg_replace_callback('@<form[^>]*action=(["\'])(.*?)\1[^>]*>@i', array($this, 'form_action'), $str);
 		
