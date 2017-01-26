@@ -147,6 +147,11 @@ function proxify_url($url, $base_url = ''){
 		$url = rel2abs($url, $base_url);
 	}
 	
+	// Make sure we do not proxy ourself
+        if(stripos($url, app_url()) === 0){
+		return $base_url;
+        }
+	
 	return app_url().'?q='.url_encrypt($url);
 }
 
