@@ -52,6 +52,25 @@ class ProxifyPlugin extends AbstractPlugin {
 		return str_replace($matches[2], proxify_url($matches[2], $this->base_url), $matches[0]);
 	}
 
+	private function img_src($matches){
+
+                // srcset="https://cdn.pixabay.com/photo/2016/12/17/20/13/ice-cubes-1914351__340.jpg 1x, https://cdn.pixabay.com/photo/2016/12/17/20/13/ice-cubes-1914351__480.jpg 2x"
+		preg_match_all('#\bhttps?://[^\s()<>]+(?:\([\w\d]+\)|([^[:punct:]\s]|/))#', $matches[2], $urls);
+                if($urls[0]){
+                        $tmp = $matches[2];
+			foreach($urls[0] as $url){
+				if(preg_match('@^http(s)\:\/\/@is', $url)){
+					$tmp = str_replace($url, proxify_url($url, $this->base_url), $tmp);
+                                }
+                        }
+                        return $tmp;
+                }
+
+                // data-thumb="//i.ytimg.com/i/lgRkhTL3_hImCAmdLfDE4g/1.jpg" 
+                // data-lazy="https://cdn.pixabay.com/photo/2016/10/22/22/37/eyelash-curler-1761855__340.jpg"
+		return str_replace($matches[2], proxify_url($matches[2], $this->base_url), $matches[0]);
+	}
+	
 	private function form_action($matches){
 	
 		// $matches[1] holds single or double quote - whichever was used by webmaster
@@ -167,7 +186,13 @@ class ProxifyPlugin extends AbstractPlugin {
 		$str = preg_replace_callback('@src\s*=\s*(["|\'])(.*?)\1@i', array($this, 'html_src'), $str);
 		
 		// Proxify also URLs\Images like this: <img data-thumb="//i.ytimg.com/i/lgRkhTL3_hImCAmdLfDE4g/1.jpg" 
-		$str = preg_replace_callback('@data-thumb=(["|\'])(.*?)\1@i', array($this, 'html_src'), $str);
+		$str = preg_replace_callback('@data-thumb=(["|\'])(.*?)\1@i', array($this, 'img_src'), $str);
+		
+		// Proxify also URLs\images like this: <img srcset="https://cdn.pixabay.com/photo/2016/12/17/20/13/ice-cubes-1914351__340.jpg 1x, https://cdn.pixabay.com/photo/2016/12/17/20/13/ice-cubes-1914351__480.jpg 2x" 
+		$str = preg_replace_callback('@srcset=(["|\'])(.*?)\1@i', array($this, 'img_src'), $str);
+		
+		// Proxify also URLs\images like this: data-lazy="https://cdn.pixabay.com/photo/2016/10/22/22/37/eyelash-curler-1761855__340.jpg"
+		$str = preg_replace_callback('@srcset=(["|\'])(.*?)\1@i', array($this, 'img_src'), $str);
 		
 		// sometimes form action is empty - which means a postback to the current page
 		$str = preg_replace_callback('@<form[^>]*action=(["\'])(.*?)\1[^>]*>@i', array($this, 'form_action'), $str);
