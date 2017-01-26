@@ -54,8 +54,14 @@ class ProxifyPlugin extends AbstractPlugin {
 
 	private function img_src($matches){
 
+                // Replace all http(s):// URLs with proxified URL
+                // Support also srcset="" with multiple URLs inside (for images), i.e:
                 // srcset="https://cdn.pixabay.com/photo/2016/12/17/20/13/ice-cubes-1914351__340.jpg 1x, https://cdn.pixabay.com/photo/2016/12/17/20/13/ice-cubes-1914351__480.jpg 2x"
+
+                // First extract all valid URLs (regex taken from WordPress.org code)
 		preg_match_all('#\bhttps?://[^\s()<>]+(?:\([\w\d]+\)|([^[:punct:]\s]|/))#', $matches[2], $urls);
+
+                // If URLs are found, replace each URL with proxified URL
                 if($urls[0]){
                         $tmp = $matches[2];
 			foreach($urls[0] as $url){
@@ -66,9 +72,8 @@ class ProxifyPlugin extends AbstractPlugin {
                         return $tmp;
                 }
 
-                // data-thumb="//i.ytimg.com/i/lgRkhTL3_hImCAmdLfDE4g/1.jpg" 
-                // data-lazy="https://cdn.pixabay.com/photo/2016/10/22/22/37/eyelash-curler-1761855__340.jpg"
-		return str_replace($matches[2], proxify_url($matches[2], $this->base_url), $matches[0]);
+                // If no http(s):// URLs are found, return $matches[0]
+                return $matches[0];
 	}
 	
 	private function form_action($matches){
