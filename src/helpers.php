@@ -147,10 +147,16 @@ function proxify_url($url, $base_url = ''){
 		$url = rel2abs($url, $base_url);
 	}
 	
-	// Make sure we do not proxy ourself
-        if(stripos($url, app_url()) === 0){
-		return $url;
-        }
+	// Make sure we do not proxy our proxy:
+	
+	// Extract the real host (without www.) from the two URLs
+	$host1 = preg_replace('/^www\./is', '', trim(parse_url($url, PHP_URL_HOST)));
+	$host2 = preg_replace('/^www\./is', '', trim(parse_url(app_url(), PHP_URL_HOST)));
+
+	// Compare the two hosts (including subdomains) with our proxy URL
+	if(strtolower($host1) == strtolower($host2) || stripos(".".$host1, $host2) ){
+		return $base_url;
+	}
 	
 	return app_url().'?q='.url_encrypt($url);
 }
