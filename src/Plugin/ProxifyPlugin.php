@@ -39,6 +39,14 @@ class ProxifyPlugin extends AbstractPlugin {
 			return $matches[0];
 		}
 		
+		// do not proxify these links
+		// android-app://com.google.android.youtube/http/www.youtube.com/
+		// ios-app://544007664/vnd.youtube/www.youtube.com/
+		// javascript:;
+		if(strpos($url, "android-app") === 0 || strpos($url, "ios-app") === 0 || strpos($url, "javascript") === 0){
+			return $matches[0];
+		}
+		
 		// do we even need to proxify this URL?
 		return str_replace($url, proxify_url($url, $this->base_url), $matches[0]);
 	}
