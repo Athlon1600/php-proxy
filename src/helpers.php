@@ -147,20 +147,24 @@ function proxify_url($url, $base_url = ''){
 		$url = rel2abs($url, $base_url);
 	}
 	
-	// Make sure we do not proxy our proxy:
-	
-	// Extract the real host (without www.) from the two URLs
-	$host1 = preg_replace('/^www\./is', '', trim(parse_url($url, PHP_URL_HOST)));
-	$host2 = preg_replace('/^www\./is', '', trim(parse_url(app_url(), PHP_URL_HOST)));
-
-	// Make sure our proxy app host is not present in the URL to be proxified
-	if(strtolower($host1) == strtolower($host2) || stripos(".".$host1, $host2) ){
-		return $base_url;
+	// If $url is empty...
+	if(!$url){
+		return $base_url ? $base_url : app_url();
 	}
 	
-	// Make sure the schema is only http and https
-	if(!in_array(strtolower(parse_url($url, PHP_URL_SCHEME)), array('http', 'https'), true)){
-		return $base_url;
+	// Extract the real host (without www.) from $url and app_url()
+	$url_host = preg_replace('/^www\./is', '', trim(parse_url($url, PHP_URL_HOST)));
+	$app_host = preg_replace('/^www\./is', '', trim(parse_url(app_url(), PHP_URL_HOST)));
+
+	// Make sure the proxy app host is not present in the URL to be proxified
+	if(strtolower($url_host) == strtolower($app_host) || stripos(".".$url_host, $app_host) ){
+		// Maybe it would be better to show an error message?
+		return app_url();
+	}
+	
+	// Make sure the scheme is http, https, ftp
+	if(!in_array(strtolower(parse_url($url, PHP_URL_SCHEME)), array('http','https','ftp'), true)){
+		return $base_url ? $base_url : app_url();
 	}
 	
 	return app_url().'?q='.url_encrypt($url);
