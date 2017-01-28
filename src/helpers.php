@@ -153,7 +153,7 @@ function proxify_url($url, $base_url = ''){
 	$host1 = preg_replace('/^www\./is', '', trim(parse_url($url, PHP_URL_HOST)));
 	$host2 = preg_replace('/^www\./is', '', trim(parse_url(app_url(), PHP_URL_HOST)));
 
-	// Compare the two hosts (including subdomains) with our proxy URL
+	// Make sure our proxy app host is not present in the URL to be proxified
 	if(strtolower($host1) == strtolower($host2) || stripos(".".$host1, $host2) ){
 		return $base_url;
 	}
