@@ -158,6 +158,11 @@ function proxify_url($url, $base_url = ''){
 		return $base_url;
 	}
 	
+	// Make sure the schema is only http and https
+	if(in_array(strtolower(parse_url($url, PHP_URL_SCHEME)), array('http', 'https'), true)){
+		return $base_url;
+	}
+	
 	return app_url().'?q='.url_encrypt($url);
 }
 
