@@ -226,11 +226,16 @@ class ProxifyPlugin extends AbstractPlugin {
 		$str = preg_replace_callback('@\s*poster\s*=\s*(["|\'])(.*?)\1@i', array($this, 'custom_src'), $str);
 		
 		// document.getElementById('RTAImage').setAttribute('src', "http://site.com/image.gif?cache=20170128");
-		$str = preg_replace_callback('@setAttribute\(\'src\'\,\s*(["|\'])(.*?)\1@i', array($this, 'custom_src'), $str);
-		$str = preg_replace_callback('@setAttribute\(\"src\"\,\s*(["|\'])(.*?)\1@i', array($this, 'custom_src'), $str);
+		$str = preg_replace_callback('@setAttribute\(\s*["|\']src["|\']\s*\,\s*(["|\'])(.*?)\1@i', array($this, 'custom_src'), $str);
 
 		// src : '//site.com/image.jpg'
 		$str = preg_replace_callback('@\s*src\s*:\s*(["|\'])(.*?)\1@i', array($this, 'custom_src'), $str);
+		
+		// 'image':'http://site.com/image.jpg'
+		$str = preg_replace_callback('@\s*["|\']image["|\']\s*:\s*(["|\'])(.*?)\1@i', array($this, 'custom_src'), $str);
+
+		// playlist_array.push("http://site.com/image.jpg");
+		$str = preg_replace_callback('@\s*playlist_array\.push\(\s*(["|\'])(.*?)\1@i', array($this, 'custom_src'), $str);
 		
 		// sometimes form action is empty - which means a postback to the current page
 		$str = preg_replace_callback('@<form[^>]*action=(["\'])(.*?)\1[^>]*>@i', array($this, 'form_action'), $str);
