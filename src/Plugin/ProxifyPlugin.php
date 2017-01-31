@@ -138,6 +138,12 @@ class ProxifyPlugin extends AbstractPlugin {
 			return;
 		}
 		
+		// Return plain text content without replacing URLs
+		if(strpos($content_type, "text/plain") === 0){
+			$response->setContent($str);
+			return;
+		}
+		
 		// let's remove all frames?? does not protect against the frames created dynamically via javascript
 		$str = preg_replace('@<iframe[^>]*>[^<]*<\\/iframe>@is', '', $str);
 		
