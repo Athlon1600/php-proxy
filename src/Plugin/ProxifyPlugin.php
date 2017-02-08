@@ -82,7 +82,10 @@ class ProxifyPlugin extends AbstractPlugin {
 			foreach($urls[0] as $url){
 				// Make sure the URL is valid
 				if(preg_match('@^https?\:\/\/@is', trim($url)) && (!filter_var(trim($url), FILTER_VALIDATE_URL) === false)){
-					$matches[0] = str_replace($url, proxify_url($url, $this->base_url), $matches[0]);
+					// Do not proxify an already proxified URL
+					if(stripos($url, app_url()) === FALSE){
+						$matches[0] = str_replace($url, proxify_url($url, $this->base_url), $matches[0]);
+					}
 				}
 			}
 			// Now return $matches[0] with all URLs proxified
@@ -92,7 +95,10 @@ class ProxifyPlugin extends AbstractPlugin {
 		// Here I use str_replace() directly to the single URL
 		// If $matches[2] is a valid (single) URL return it proxified
 		if(preg_match('@^https?\:\/\/@is', trim($matches[2])) && (!filter_var(trim($matches[2]), FILTER_VALIDATE_URL) === false)){
-			return str_replace($matches[2], proxify_url($matches[2], $this->base_url), $matches[0]);
+			// Do not proxify an already proxified URL
+			if(stripos($matches[2], app_url()) === FALSE){
+				return str_replace($matches[2], proxify_url($matches[2], $this->base_url), $matches[0]);
+			}
 		}
 
 		// By default return $matches[0];
@@ -213,29 +219,14 @@ class ProxifyPlugin extends AbstractPlugin {
 		*/
 		$str = preg_replace_callback('@src\s*=\s*(["|\'])(.*?)\1@i', array($this, 'html_src'), $str);
 		
-		// srcset="https://cdn.pixabay.com/photo/2016/12/17/20/13/ice-cubes-1914351__340.jpg 1x, https://cdn.pixabay.com/photo/2016/12/17/20/13/ice-cubes-1914351__480.jpg 2x" 
-		$str = preg_replace_callback('@\s*srcset\s*=\s*(["|\'])(.*?)\1@i', array($this, 'custom_src'), $str);
+		// <img srcset="https://cdn.pixabay.com/photo/2016/12/17/20/13/ice-cubes-1914351__340.jpg 1x, https://cdn.pixabay.com/photo/2016/12/17/20/13/ice-cubes-1914351__480.jpg 2x" 
+		$str = preg_replace_callback('@<img[^>]*\s*srcset\s*=\s*(["|\'])(.*?)\1@i', array($this, 'custom_src'), $str);
 
-		// Universal rule to replace all data-* URLs
-		$str = preg_replace_callback('@\s*data-[a-z0-9]*\s*=\s*(["|\'])(.*?)\1@i', array($this, 'custom_src'), $str);
+		// Replace all data-* URLs inside <img>
+		$str = preg_replace_callback('@<img[^>]*\s*data-[a-z0-9]*\s*=\s*(["|\'])(.*?)\1@i', array($this, 'custom_src'), $str);
 		
-		// meta itemprop="thumbnailUrl" content="http://site.com/image.jpg">
-		$str = preg_replace_callback('@\s*content\s*=\s*(["|\'])(.*?)\1@i', array($this, 'custom_src'), $str);
-		
-		// autobuffer controls poster="http://site.com/image.jpg"></video>
-		$str = preg_replace_callback('@\s*poster\s*=\s*(["|\'])(.*?)\1@i', array($this, 'custom_src'), $str);
-		
-		// document.getElementById('RTAImage').setAttribute('src', "http://site.com/image.gif?cache=20170128");
-		$str = preg_replace_callback('@setAttribute\(\s*["|\']src["|\']\s*\,\s*(["|\'])(.*?)\1@i', array($this, 'custom_src'), $str);
-
-		// src : '//site.com/image.jpg'
-		$str = preg_replace_callback('@\s*src\s*:\s*(["|\'])(.*?)\1@i', array($this, 'custom_src'), $str);
-		
-		// 'image':'http://site.com/image.jpg'
-		$str = preg_replace_callback('@\s*["|\']image["|\']\s*:\s*(["|\'])(.*?)\1@i', array($this, 'custom_src'), $str);
-
-		// playlist_array.push("http://site.com/image.jpg");
-		$str = preg_replace_callback('@\s*playlist_array\.push\(\s*(["|\'])(.*?)\1@i', array($this, 'custom_src'), $str);
+		// <video autobuffer controls poster="http://site.com/image.jpg"></video>
+		$str = preg_replace_callback('@<video[^>]*\s*poster\s*=\s*(["|\'])(.*?)\1@i', array($this, 'custom_src'), $str);
 		
 		// sometimes form action is empty - which means a postback to the current page
 		$str = preg_replace_callback('@<form[^>]*action=(["\'])(.*?)\1[^>]*>@i', array($this, 'form_action'), $str);
