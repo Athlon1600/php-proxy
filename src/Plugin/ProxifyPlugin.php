@@ -29,6 +29,13 @@ class ProxifyPlugin extends AbstractPlugin {
 	private function css_import($matches){
 		return str_replace($matches[2], proxify_url($matches[2], $this->base_url), $matches[0]);
 	}
+	
+	private function meta_refresh($matches){
+		
+		$url = trim($matches[3]);
+		
+		return str_replace($url, proxify_url($url, $this->base_url), $matches[0]);
+	}
 
 	private function html_href($matches){
 		
@@ -166,6 +173,9 @@ class ProxifyPlugin extends AbstractPlugin {
 		*/
 		$str = preg_replace_callback('@src\s*=\s*(["|\'])(.*?)\1@i', array($this, 'html_src'), $str);
 		
+		// <meta http-equiv="refresh" content="0; url=/baidu.html?from=noscript"/>
+		$str = preg_replace_callback('@<meta\s*[a-zA-Z0-9-="\'\s]*content\s*=\s*(["\'])\s*[0-9]*\s*;\s*url\s*=\s*("|\'|)(.*?)\1@im', array($this, 'meta_refresh'), $str);
+
 		// sometimes form action is empty - which means a postback to the current page
 		$str = preg_replace_callback('@<form[^>]*action=(["\'])(.*?)\1[^>]*>@i', array($this, 'form_action'), $str);
 		
