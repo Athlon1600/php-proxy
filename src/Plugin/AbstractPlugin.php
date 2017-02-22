@@ -27,7 +27,7 @@ abstract class AbstractPlugin implements EventSubscriberInterface {
 	}
 	
 	// dispatch based on filter
-	final public function route(ProxyEvent $event){
+	final public function route(ProxyEvent $event, $eventName = null){
 	
 		$url = $event['request']->getUri();
 		
@@ -35,8 +35,12 @@ abstract class AbstractPlugin implements EventSubscriberInterface {
 		if($this->url_pattern && strpos($url, $this->url_pattern) === false){
 			return;
 		}
-		
-		switch($event->getName()){
+
+		// Before symfony 3.0, event name is available through $event.getName() accessor instead of callback argument.
+		if (empty($eventName) && method_exists($event, 'getName')) {
+			$eventName = $event->getName();
+		}
+		switch($eventName){
 		
 			case 'request.before_send':
 				$this->onBeforeRequest($event);
