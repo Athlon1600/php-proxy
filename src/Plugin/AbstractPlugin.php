@@ -32,8 +32,16 @@ abstract class AbstractPlugin implements EventSubscriberInterface {
 		$url = $event['request']->getUri();
 		
 		// url filter provided and current request url does not match it
-		if($this->url_pattern && strpos($url, $this->url_pattern) === false){
-			return;
+		if($this->url_pattern){
+		    if(strpos($this->url_pattern, '/') === 0){
+			    if(!preg_match($this->url_pattern, $url)) 
+				return;
+			} 
+			else
+			{
+			    if(stripos($url, $this->url_pattern) === false) 
+				return;
+			}
 		}
 		
 		switch($event->getName()){
