@@ -10,6 +10,9 @@ abstract class AbstractPlugin implements EventSubscriberInterface {
 	// apply these methods only to those events whose request URL passes this filter
 	protected $url_pattern;
 	
+	// apply these methods only to those events whose request URL passes this filter (regex)
+	protected $url_pattern_regex;
+	
 	public function onBeforeRequest(ProxyEvent $event){
 		// fired right before a request is being sent to a proxy
 	}
@@ -33,6 +36,11 @@ abstract class AbstractPlugin implements EventSubscriberInterface {
 		
 		// url filter provided and current request url does not match it
 		if($this->url_pattern && strpos($url, $this->url_pattern) === false){
+			return;
+		}
+		
+		// url filter (regex) provided and current request url does not match it
+		if($this->url_pattern_regex && !preg_match($this->url_pattern_regex, $url)){
 			return;
 		}
 		
