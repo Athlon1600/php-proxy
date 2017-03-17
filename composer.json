@@ -5,7 +5,7 @@
 	"homepage": "https://www.php-proxy.com/",
 	"require": {
 		"ext-curl": "*",
-		"symfony/event-dispatcher": "~2.6"
+		"symfony/event-dispatcher": "~3.2"
 	},
 	"suggest": {
 		"predis/predis": "For caching purposes"
