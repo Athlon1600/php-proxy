@@ -39,6 +39,14 @@ class ProxifyPlugin extends AbstractPlugin {
 			return $matches[0];
 		}
 		
+		// do not proxify these links
+		// android-app://com.google.android.youtube/http/www.youtube.com/
+		// ios-app://544007664/vnd.youtube/www.youtube.com/
+		// javascript:;
+		if(strpos($url, "android-app") === 0 || strpos($url, "ios-app") === 0 || strpos($url, "javascript") === 0){
+			return $matches[0];
+		}
+		
 		// do we even need to proxify this URL?
 		return str_replace($url, proxify_url($url, $this->base_url), $matches[0]);
 	}
@@ -52,6 +60,51 @@ class ProxifyPlugin extends AbstractPlugin {
 		return str_replace($matches[2], proxify_url($matches[2], $this->base_url), $matches[0]);
 	}
 
+	private function custom_src($matches){
+
+		// Replace all http(s):// URLs with proxified URL
+		// Support also srcset="" with multiple URLs inside (for images), i.e:
+		// srcset="https://cdn.pixabay.com/photo/2016/12/17/20/13/ice-cubes-1914351__340.jpg 1x, https://cdn.pixabay.com/photo/2016/12/17/20/13/ice-cubes-1914351__480.jpg 2x"
+
+		// Handle also "//i.ytimg.com/i/Egdi0XIXXZ-qJOFPf4JSKw/1.jpg"
+		$matches[0] = preg_replace('@\"\/\/@is', '"http://', $matches[0]);
+		$matches[0] = preg_replace('@\'\/\/@is', '\'http://', $matches[0]);
+		$matches[2] = preg_replace('@^/\/@is', 'http://', $matches[2]);
+
+		// First extract all valid URLs, regex taken from http://stackoverflow.com/a/38414688
+		preg_match_all('#(http(s)?://)?(([a-zA-Z])([-\w]+\.)+([^\s\.]+[^\s]*)+[^,.\s])#', $matches[2], $urls);
+
+		// If there is more than 1 URL, replace each URL with proxified URL
+		// I ignore if there is only 1 URL because the regex is not perfect 
+		// So I use it only for multiple URLs, i.e in srcset="http://site.com/img1.png 1x, http://site.com/img2.png"
+		// If there is only 1 URL I prefer to use str_replace() directly
+		if(count($urls[0])>1){
+			foreach($urls[0] as $url){
+				// Make sure the URL is valid
+				if(preg_match('@^https?\:\/\/@is', trim($url)) && (!filter_var(trim($url), FILTER_VALIDATE_URL) === false)){
+					// Do not proxify an already proxified URL
+					if(stripos($url, app_url()) === FALSE){
+						$matches[0] = str_replace($url, proxify_url($url, $this->base_url), $matches[0]);
+					}
+				}
+			}
+			// Now return $matches[0] with all URLs proxified
+			return $matches[0];
+		}
+
+		// Here I use str_replace() directly to the single URL
+		// If $matches[2] is a valid (single) URL return it proxified
+		if(preg_match('@^https?\:\/\/@is', trim($matches[2])) && (!filter_var(trim($matches[2]), FILTER_VALIDATE_URL) === false)){
+			// Do not proxify an already proxified URL
+			if(stripos($matches[2], app_url()) === FALSE){
+				return str_replace($matches[2], proxify_url($matches[2], $this->base_url), $matches[0]);
+			}
+		}
+
+		// By default return $matches[0];
+		return $matches[0];
+	}
+	
 	private function form_action($matches){
 	
 		// $matches[1] holds single or double quote - whichever was used by webmaster
@@ -165,6 +218,15 @@ class ProxifyPlugin extends AbstractPlugin {
 		
 		*/
 		$str = preg_replace_callback('@src\s*=\s*(["|\'])(.*?)\1@i', array($this, 'html_src'), $str);
+		
+		// <img srcset="https://cdn.pixabay.com/photo/2016/12/17/20/13/ice-cubes-1914351__340.jpg 1x, https://cdn.pixabay.com/photo/2016/12/17/20/13/ice-cubes-1914351__480.jpg 2x" 
+		$str = preg_replace_callback('@<img[^>]*\s*srcset\s*=\s*(["|\'])(.*?)\1@i', array($this, 'custom_src'), $str);
+
+		// Replace all data-* URLs inside <img>
+		$str = preg_replace_callback('@<img[^>]*\s*data-[a-z0-9]*\s*=\s*(["|\'])(.*?)\1@i', array($this, 'custom_src'), $str);
+		
+		// <video autobuffer controls poster="http://site.com/image.jpg"></video>
+		$str = preg_replace_callback('@<video[^>]*\s*poster\s*=\s*(["|\'])(.*?)\1@i', array($this, 'custom_src'), $str);
 		
 		// sometimes form action is empty - which means a postback to the current page
 		$str = preg_replace_callback('@<form[^>]*action=(["\'])(.*?)\1[^>]*>@i', array($this, 'form_action'), $str);
