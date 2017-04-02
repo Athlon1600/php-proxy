@@ -132,10 +132,11 @@ class ProxifyPlugin extends AbstractPlugin {
 		$response = $event['response'];
 		$str = $response->getContent();
 		
-		$content_type = $response->headers->get('content-type');
+		$content_type = strtolower(trim($response->headers->get('content-type')));
 		
 		// DO NOT do any proxification on .js files
-		if($content_type == 'text/javascript' || $content_type == 'application/javascript' || $content_type == 'application/x-javascript'){
+		$types = array('text/javascript', 'application/javascript', 'application/x-javascript');
+		if(in_array($content_type, $types)){
 			return;
 		}
 		
