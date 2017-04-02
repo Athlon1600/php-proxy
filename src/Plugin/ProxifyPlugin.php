@@ -36,7 +36,7 @@ class ProxifyPlugin extends AbstractPlugin {
 		$url = trim($matches[2]);
 		
 		// do not proxify magnet: links
-		if(strpos($url, "magnet") === 0){
+		if(preg_match("/^(about|javascript|magnet|mailto|tel|ios-app|android-app)/i", $url)){
 			return $matches[0];
 		}
 		
