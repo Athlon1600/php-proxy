@@ -22,39 +22,27 @@ class ProxifyPlugin extends AbstractPlugin {
 		return str_replace($matches[1], proxify_url($matches[1], $this->base_url), $matches[0]);
 	}
 	
-	/*
-	
-	this.params.logoImg&&(e="background-image: url("+this.params.logoImg+")")
-	
-	*/
+	// this.params.logoImg&&(e="background-image: url("+this.params.logoImg+")")
 	private function css_import($matches){
 		return str_replace($matches[2], proxify_url($matches[2], $this->base_url), $matches[0]);
 	}
 
-	private function html_href($matches){
+	// replace src= and href=
+	private function html_attr($matches){
 		
+		// could be empty?
 		$url = trim($matches[2]);
 		
-		// do not proxify magnet: links
-		if(strpos($url, "magnet") === 0){
+		if(stripos($url, 'data:') === 0 || stripos($url, 'magnet:') === 0 ){
 			return $matches[0];
 		}
 		
-		// do we even need to proxify this URL?
 		return str_replace($url, proxify_url($url, $this->base_url), $matches[0]);
 	}
 
-	private function html_src($matches){
-
-		if(stripos(trim($matches[2]), 'data:') === 0){
-			return $matches[0];
-		}
-		
-		return str_replace($matches[2], proxify_url($matches[2], $this->base_url), $matches[0]);
-	}
-
 	private function form_action($matches){
-	
+		
+		// sometimes form action is empty - which means a postback to the current page
 		// $matches[1] holds single or double quote - whichever was used by webmaster
 		
 		// $matches[2] holds form submit URL - can be empty which in that case should be replaced with current URL
@@ -105,24 +93,48 @@ class ProxifyPlugin extends AbstractPlugin {
 			$request->prepare();
 		}
 	}
+	
+	private function meta_refresh($matches){
+		$url = $matches[2];
+		return str_replace($url, proxify_url($url, $this->base_url), $matches[0]);
+	}
+	
+	// <title>, <base>, <link>, <style>, <meta>, <script>, <noscript>
+	private function proxify_head($str){
 
-	/*
-	TODO:
-			$input = preg_replace('#<meta[^>]*name=["\'](title|description|keywords)["\'][^>]*>#is', '', $input, 3);
-            $input = preg_replace('#<link[^>]*rel=["\'](icon|shortcut icon)["\'][^>]*>#is', '', $input, 2);
-			
-					# Remove and record a <base> href
-		$input = preg_replace_callback('#<base href\s*=\s*([\\\'"])?((?(1)(?(?<=")[^"]{1,2048}|[^\\\']{1,2048})|[^\s"\\\'>]{1,2048}))(?(1)\\1|)[^>]*>#i', 'html_stripBase', $input, 1);
-		
-				# Proxy url= values in meta redirects
-		$input = preg_replace_callback('#content\s*=\s*(["\\\'])?[0-9]+\s*;\s*url=([\\\'"]|&\#39;)?((?(?<=")[^"]+|(?(?<=\\\')[^\\\']+|[^\\\'" >]+)))(?(2)\\2|)(?(1)\\1|)#i', 'html_metaRefresh', $input, 1);
+		// let's replace page titles with something custom
+		if(Config::get('replace_title')){
+			$str = preg_replace('/<title[^>]*>(.*?)<\/title>/is', '<title>'.Config::get('replace_title').'</title>', $str);
+		}
 		
 		
+		// base - update base_url contained in href - remove <base> tag entirely
+		//$str = preg_replace_callback('/<base[^>]*href=
 		
-		# Process forms
-		$input = preg_replace_callback('#<form([^>]*)>(.*?)</form>#is', 'html_form', $input);
+		// link - replace href with proxified
+		// link rel="shortcut icon" - replace or remove
 		
-	*/
+		// meta - only interested in http-equiv - replace url refresh
+		// <meta http-equiv="refresh" content="5; url=http://example.com/">
+		$str = preg_replace_callback('/content=(["\'])\d+\s*;\s*url=(.*?)\1/is', array($this, 'meta_refresh'), $str);
+		
+		return $str;
+	}
+	
+	// The <body> background attribute is not supported in HTML5. Use CSS instead.
+	private function proxify_css($str){
+		
+		// The HTML5 standard does not require quotes around attribute values.
+		
+		// if {1} is not there then youtube breaks for some reason
+		$str = preg_replace_callback('@[^a-z]{1}url\s*\((?:\'|"|)(.*?)(?:\'|"|)\)@im', array($this, 'css_url'), $str);
+		
+		// https://developer.mozilla.org/en-US/docs/Web/CSS/@import
+		// TODO: what about @import directives that are outside <style>?
+		$str = preg_replace_callback('/@import (\'|")(.*?)\1/i', array($this, 'css_import'), $str);
+		
+		return $str;
+	}
 	
 	public function onCompleted(ProxyEvent $event){
 	
@@ -130,9 +142,9 @@ class ProxifyPlugin extends AbstractPlugin {
 		$this->base_url = $event['request']->getUri();
 		
 		$response = $event['response'];
-		$str = $response->getContent();
-		
 		$content_type = $response->headers->get('content-type');
+		
+		$str = $response->getContent();
 		
 		// DO NOT do any proxification on .js files
 		if($content_type == 'text/javascript' || $content_type == 'application/javascript' || $content_type == 'application/x-javascript'){
@@ -147,43 +159,23 @@ class ProxifyPlugin extends AbstractPlugin {
 			foreach($js_remove as $pattern){
 				if(strpos($domain, $pattern) !== false){
 					$str = Html::remove_scripts($str);
-					break;
 				}
 			}
 		}
 		
+		// add html.no-js
+		
 		// let's remove all frames?? does not protect against the frames created dynamically via javascript
 		$str = preg_replace('@<iframe[^>]*>[^<]*<\\/iframe>@is', '', $str);
 		
-		// let's replace page titles with something custom
-		if(Config::get('replace_title')){
-			$str = preg_replace('/<title[^>]*>(.*?)<\/title>/ims', '<title>'.Config::get('replace_title').'</title>', $str);
-		}
+		$str = $this->proxify_head($str);
+		$str = $this->proxify_css($str);
 		
-		/* css
-		if {1} is not there then youtube breaks for some reason
-		*/
-		$str = preg_replace_callback('@[^a-z]{1}url\s*\((?:\'|"|)(.*?)(?:\'|"|)\)@im', array($this, 'css_url'), $str);
+		// src= and href=
+		$str = preg_replace_callback('@(?:src|href)\s*=\s*(["|\'])(.*?)\1@is', array($this, 'html_attr'), $str);
 		
-		// https://developer.mozilla.org/en-US/docs/Web/CSS/@import
-		// TODO: what about @import directives that are outside <style>?
-		$str = preg_replace_callback('/@import (\'|")(.*?)\1/i', array($this, 'css_import'), $str);
-		
-		// html .*? just in case href is empty...
-		$str = preg_replace_callback('@href\s*=\s*(["\'])(.*?)\1@im', array($this, 'html_href'), $str);
-		
-		
-		/*
-		
-		src= can be empty - then what?
-		
-		*/
-		$str = preg_replace_callback('@src\s*=\s*(["|\'])(.*?)\1@i', array($this, 'html_src'), $str);
-		
-		// sometimes form action is empty - which means a postback to the current page
+		// form
 		$str = preg_replace_callback('@<form[^>]*action=(["\'])(.*?)\1[^>]*>@i', array($this, 'form_action'), $str);
-		
-		//$str = str_replace('document.forms[0]', 'document.forms[1]', $str);
 		
 		$response->setContent($str);
 	}
