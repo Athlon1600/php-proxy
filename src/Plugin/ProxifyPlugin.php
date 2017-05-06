@@ -33,7 +33,7 @@ class ProxifyPlugin extends AbstractPlugin {
 		// could be empty?
 		$url = trim($matches[2]);
 		
-		if(stripos($url, 'data:') === 0 || stripos($url, 'magnet:') === 0 ){
+		if(stripos($url, 'data:') === 0 || stripos($url, 'magnet:') === 0 || stripos($url, 'about:') === 0 || stripos($url, 'javascript:') === 0 || stripos($url, 'mailto:') === 0 || stripos($url, 'tel:') === 0 || stripos($url, 'ios-app:') === 0 || stripos($url, 'android-app:') === 0){
 			return $matches[0];
 		}
 		
