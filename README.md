@@ -68,7 +68,7 @@ $response->send();
 Plugin Example
 --------
 
-```
+```php
 namespace Proxy\Plugin;
 
 use Proxy\Plugin\AbstractPlugin;
