@@ -163,6 +163,12 @@ class ProxifyPlugin extends AbstractPlugin {
 			}
 		}
 		
+		// Return plain text content without replacing URLs
+		if(stripos($content_type, "text/plain") === 0){
+			$response->setContent($str);
+			return;
+		}
+		
 		// add html.no-js
 		
 		// let's remove all frames?? does not protect against the frames created dynamically via javascript
