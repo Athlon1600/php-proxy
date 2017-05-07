@@ -3,37 +3,19 @@
 namespace Proxy;
 
 class Html {
-
-/*
-
-$outputSource = preg_replace("/><\/(area|base|br|col|command|embed|hr|img|input|link|meta|param|source)>/", " />", $outputSource);
-
-$html = mb_eregi_replace("<!\[CDATA\[(.*?)\]\]>", '', $html);
-
- // remove white space before closing tags
-        $html = mb_eregi_replace("'\s+>", "'>", $html);
-        $html = mb_eregi_replace('"\s+>', '">', $html);
-
-*/
-
+	
 	public static function remove_scripts($html){
-		
-		$html = mb_eregi_replace("<\s*script[^>]*[^/]>(.*?)<\s*/\s*script\s*>", '', $html);
-		$html = mb_eregi_replace("<\s*script\s*>(.*?)<\s*/\s*script\s*>", '', $html);
-		
+		$html = preg_replace('/<\s*script[^>]*>(.*?)<\s*\/\s*script\s*>/is', '', $html);
 		return $html;
 	}
 	
 	public static function remove_styles($html){
-	
-		$html = mb_eregi_replace("<\s*style[^>]*[^/]>(.*?)<\s*/\s*style\s*>", '', $html);
-		$html = mb_eregi_replace("<\s*style\s*>(.*?)<\s*/\s*style\s*>", '', $html);
-		
+		$html = preg_replace('/<\s*style[^>]*>(.*?)<\s*\/\s*style\s*>/is', '', $html);
 		return $html;
 	}
 	
 	public static function remove_comments($html){
-		return mb_eregi_replace("<!--(.*?)-->", '', $html);
+		return preg_replace('/<!--(.*?)-->/s', '', $html);
 	}
 
 	private static function find($selector, $html, $start_from = 0){
