@@ -146,8 +146,8 @@ class ProxifyPlugin extends AbstractPlugin {
 		
 		$str = $response->getContent();
 		
-		// DO NOT do any proxification on .js files
-		if($content_type == 'text/javascript' || $content_type == 'application/javascript' || $content_type == 'application/x-javascript'){
+		// DO NOT do any proxification on .js files and text/plain content type
+		if($content_type == 'text/javascript' || $content_type == 'application/javascript' || $content_type == 'application/x-javascript' || $content_type == 'text/plain'){
 			return;
 		}
 		
