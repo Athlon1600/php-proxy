@@ -146,8 +146,8 @@ class ProxifyPlugin extends AbstractPlugin {
 		
 		$str = $response->getContent();
 		
-		// DO NOT do any proxification on .js files
-		if($content_type == 'text/javascript' || $content_type == 'application/javascript' || $content_type == 'application/x-javascript'){
+		// DO NOT do any proxification on .js files and text/plain content type
+		if($content_type == 'text/javascript' || $content_type == 'application/javascript' || $content_type == 'application/x-javascript' || $content_type == 'text/plain'){
 			return;
 		}
 		
@@ -161,12 +161,6 @@ class ProxifyPlugin extends AbstractPlugin {
 					$str = Html::remove_scripts($str);
 				}
 			}
-		}
-		
-		// Return plain text content without replacing URLs
-		if(stripos($content_type, "text/plain") === 0){
-			$response->setContent($str);
-			return;
 		}
 		
 		// add html.no-js
