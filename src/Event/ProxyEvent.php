@@ -4,6 +4,7 @@ namespace Proxy\Event;
 
 use Symfony\Component\EventDispatcher\Event;
 
+// http://symfony.com/doc/current/components/event_dispatcher/generic_event.html
 class ProxyEvent extends Event implements \ArrayAccess {
 
 	private $data;
@@ -13,14 +14,14 @@ class ProxyEvent extends Event implements \ArrayAccess {
 	}
 	
 	public function offsetSet($offset, $value){
-	
+		
 		if(is_null($offset)) {
 			$this->data[] = $value;
 		} else {
 			$this->data[$offset] = $value;
 		}
-    }
-
+	}
+	
 	public function offsetExists($offset){
 		return isset($this->data[$offset]);
 	}

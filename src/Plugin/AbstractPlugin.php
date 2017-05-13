@@ -3,6 +3,7 @@
 namespace Proxy\Plugin;
 
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
+use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Proxy\Event\ProxyEvent;
 
 abstract class AbstractPlugin implements EventSubscriberInterface {
@@ -27,7 +28,7 @@ abstract class AbstractPlugin implements EventSubscriberInterface {
 	}
 	
 	// dispatch based on filter
-	final public function route(ProxyEvent $event){
+	final public function route(ProxyEvent $event, $event_name, EventDispatcherInterface $dispatcher){
 	
 		$url = $event['request']->getUri();
 		
@@ -44,7 +45,7 @@ abstract class AbstractPlugin implements EventSubscriberInterface {
 			}
 		}
 		
-		switch($event->getName()){
+		switch($event_name){
 		
 			case 'request.before_send':
 				$this->onBeforeRequest($event);
@@ -64,6 +65,8 @@ abstract class AbstractPlugin implements EventSubscriberInterface {
 		}
 	}
 	
+	// This method returns an array indexed by event names and whose values are either the method name to call 
+	// or an array composed of the method name to call and a priority.
 	final public static function getSubscribedEvents(){
 		return array(
 			'request.before_send' => 'route',
