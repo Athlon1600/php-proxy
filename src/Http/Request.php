@@ -259,18 +259,31 @@ class Request {
 		}
 		
 		// data better have [name, tmp_name, and optional type]
-		foreach($files as $name => $values){
-			
-			// There must be no error http://php.net/manual/en/features.file-upload.errors.php
-			if(!$values['tmp_name'] || $values['error'] !== 0 || !is_readable($values['tmp_name'])){
-				continue;
+		foreach($files as $name => $values) {
+			// Multiple files can be uploaded using different name for input.
+			// See http://php.net/manual/en/features.file-upload.multiple.php
+			if (!is_array($values['tmp_name'])) {
+				$multiValues = array_map(function ($a) {
+					return (array)$a;
+				}, $values);
+				$fieldName = $name;
+			} else {
+				$multiValues = $values;
+				$fieldName = "{$name}[]";
 			}
-			
-			$body .= sprintf($part_file, $boundary, $name, $values['name'], $values['type']);
-			$body .= file_get_contents($values['tmp_name']);
-			$body .= "\r\n";
+
+			foreach (array_keys($multiValues['tmp_name']) as $key) {
+
+				// There must be no error http://php.net/manual/en/features.file-upload.errors.php
+				if (!$multiValues['tmp_name'][$key] || $multiValues['error'][$key] !== 0 || !is_readable($multiValues['tmp_name'][$key])) {
+					continue;
+				}
+
+				$body .= sprintf($part_file, $boundary, $fieldName, $multiValues['name'][$key], $multiValues['type'][$key]);
+				$body .= file_get_contents($multiValues['tmp_name'][$key]);
+				$body .= "\r\n";
+			}
 		}
-		
 		$body .= "--{$boundary}--\r\n\r\n";
 		
 		return $body;
