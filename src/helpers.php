@@ -147,6 +147,40 @@ function proxify_url($url, $base_url = ''){
 		$url = rel2abs($url, $base_url);
 	}
 	
+	// If $url is empty...
+	if(!$url){
+		return $base_url ? $base_url : app_url();
+	}
+	
+	// Extract the real host (without www.) from $url and app_url()
+	$url_host = preg_replace('/^www\./is', '', trim(parse_url($url, PHP_URL_HOST)));
+	$app_host = preg_replace('/^www\./is', '', trim(parse_url(app_url(), PHP_URL_HOST)));
+
+	// Make sure the proxy app host is not present in the URL to be proxified
+	if(strtolower($url_host) == strtolower($app_host) || stripos(".".$url_host, $app_host) ){
+		// Maybe it would be better to show an error message?
+		return app_url();
+	}
+	
+	// Make sure to not proxify localhost
+	if(strtolower($url_host) == "localhost" ){
+		// Maybe it would be better to show an error message?
+		return app_url();
+	}
+	
+	// Make sure to not proxify internal IP addresses
+	if(filter_var($url_host, FILTER_VALIDATE_IP)){
+		if(filter_var($url_host, FILTER_VALIDATE_IP, FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE) === false){
+			// Maybe it would be better to show an error message?
+			return app_url();
+		}
+	}
+	
+	// Make sure the scheme is http, https, ftp
+	if(!in_array(strtolower(parse_url($url, PHP_URL_SCHEME)), array('http','https','ftp'), true)){
+		return $base_url ? $base_url : app_url();
+	}
+	
 	return app_url().'?q='.url_encrypt($url);
 }
 
