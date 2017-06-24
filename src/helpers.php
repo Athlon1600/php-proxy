@@ -15,6 +15,17 @@ function in_arrayi($needle, $haystack){
 	return in_array(strtolower($needle), array_map('strtolower', $haystack));
 }
 
+function re_match($pattern, $string){
+	
+	$quoted = preg_quote($pattern, '#');
+	$translated = strtr($quoted, array(
+		'\*' => '.*',
+		'\?' => '.'
+	));
+	
+	return preg_match("#^".$translated."$#i", $string) === 1;
+}
+
 // regular array_merge does not work if arrays have numeric keys...
 function array_merge_custom(){
 	
