@@ -15,7 +15,7 @@ use Proxy\Http\Response;
 class Proxy {
 
 	// proxy version!
-	const VERSION = '5.0.1';
+	const VERSION = '5.0.4';
 	
 	private $dispatcher;
 	
@@ -112,17 +112,17 @@ class Proxy {
 			CURLOPT_FOLLOWLOCATION	=> false,
 			CURLOPT_AUTOREFERER		=> false
 		);
-		
-		// this is probably a good place to add custom curl options that way other critical options below would overwrite that
-		$config_options = Config::get('curl', array());
-		
-		$options = array_merge_custom($options, $config_options);
-		
+
 		$options[CURLOPT_HEADERFUNCTION] = array($this, 'header_callback');
 		$options[CURLOPT_WRITEFUNCTION] = array($this, 'write_callback');
 		
 		// Notify any listeners that the request is ready to be sent, and this is your last chance to make any modifications.
 		$this->dispatcher->dispatch('request.before_send', new ProxyEvent(array('request' => $this->request, 'response' => $this->response)));
+
+        // this is probably a good place to add custom curl options that way other critical options below would overwrite that
+        $config_options = Config::get('curl', array());
+
+        $options = array_merge_custom($options, $config_options);
 		
 		// We may not even need to send this request if response is already available somewhere (CachePlugin)
 		if($this->request->params->has('request.complete')){
@@ -132,12 +132,10 @@ class Proxy {
 		
 			// any plugin might have changed our URL by this point
 			$options[CURLOPT_URL] = $this->request->getUri();
-			
 			// fill in the rest of cURL options
 			$options[CURLOPT_HTTPHEADER] = explode("\r\n", $this->request->getRawHeaders());
 			$options[CURLOPT_CUSTOMREQUEST] = $this->request->getMethod();
 			$options[CURLOPT_POSTFIELDS] =  $this->request->getRawBody();
-			
 			$ch = curl_init();
 			curl_setopt_array($ch, $options);
 			
