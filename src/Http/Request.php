@@ -114,33 +114,10 @@ class Request {
 		return $this->method;
 	}
 	
-	// https://github.com/guzzle/psr7/blob/master/src/functions.php
+	// this was no longer working --- https://github.com/guzzle/psr7/blob/master/src/functions.php
 	public static function parseQuery($query){
-		
 		$result = array();
-		
-		foreach(explode('&', $query) as $kvp){
-			$parts = explode('=', $kvp);
-			$key = rawurldecode($parts[0]);
-			if(substr($key, -2) == '[]'){
-				$key = substr($key, 0, -2);
-            }
-			
-			// keys with NULL will be ignored in http_build_query - that's why it has to be ''
-			$value = isset($parts[1]) ? rawurldecode($parts[1]) : '';
-			
-			// brand new key=value
-			if(!isset($result[$key])){
-				$result[$key] = $value;
-			} else {
-				// key already exists in some form...
-				if(!is_array($result[$key])){
-					$result[$key] = array($result[$key]);
-				}
-				
-				$result[$key][] = $value;
-			}
-		}
+		parse_str($query, $result);
 		
 		return $result;
 	}
