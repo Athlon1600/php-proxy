@@ -118,6 +118,9 @@ class ProxifyPlugin extends AbstractPlugin {
 		// <meta http-equiv="refresh" content="5; url=http://example.com/">
 		$str = preg_replace_callback('/content=(["\'])\d+\s*;\s*url=(.*?)\1/is', array($this, 'meta_refresh'), $str);
 		
+		// remove the "integrity" attribute of some elements - fix some website not rendering properly (like Github)
+		$str = preg_replace('/[^<(.*?)]integrity="(.*?)"/is', '', $str);
+		
 		return $str;
 	}
 	
