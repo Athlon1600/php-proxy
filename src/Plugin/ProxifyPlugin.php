@@ -142,13 +142,16 @@ class ProxifyPlugin extends AbstractPlugin {
 		$this->base_url = $event['request']->getUri();
 		
 		$response = $event['response'];
-		$content_type = $response->headers->get('content-type');
+		$content_type = strtolower(trim($response->headers->get('content-type')));
 		
 		$str = $response->getContent();
 		
 		// DO NOT do any proxification on .js files and text/plain content type
-		if($content_type == 'text/javascript' || $content_type == 'application/javascript' || $content_type == 'application/x-javascript' || $content_type == 'text/plain'){
-			return;
+		// Support also resource like Content-Type: text/javascript;charset=UTF-8
+		foreach(array('text/javascript', 'application/javascript', 'application/x-javascript', 'text/plain') as $type){
+			if(strpos($content_type, $type) === 0){
+				return;
+			}
 		}
 		
 		// remove JS from urls
