@@ -36,7 +36,7 @@ class Proxy {
 	}
 	
 	private function header_callback($ch, $headers){
-	
+
 		$parts = explode(":", $headers, 2);
 		
 		// extract status code

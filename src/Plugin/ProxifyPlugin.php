@@ -174,6 +174,25 @@ class ProxifyPlugin extends AbstractPlugin {
 		// src= and href=
 		$str = preg_replace_callback('@(?:src|href)\s*=\s*(["|\'])(.*?)\1@is', array($this, 'html_attr'), $str);
 		
+		// img srcset
+		$str = preg_replace_callback('/srcset=\"(.*?)\"/i', function($matches){
+			$src = $matches[1];
+			
+			// url_1 1x, url_2 4x, ...
+			$urls = preg_split('/\s*,\s*/', $src);
+			foreach($urls as $part){
+				
+				// TODO: add str_until helper
+				$pos = strpos($part, ' ');
+				if($pos !== false){
+					$url = substr($part, 0, $pos);
+					$src = str_replace($url, proxify_url($url, $this->base_url), $src);
+				}
+			}
+			
+			return 'srcset="'.$src.'"';
+		}, $str);
+		
 		// form
 		$str = preg_replace_callback('@<form[^>]*action=(["\'])(.*?)\1[^>]*>@i', array($this, 'form_action'), $str);
 		
