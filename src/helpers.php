@@ -7,6 +7,17 @@ function clean_content_type($content_type){
 	return trim(preg_replace('@;.*@', '', $content_type));
 }
 
+function starts_with($haystack, $needles){
+	foreach( (array)$needles as $n){
+		if($n !== '' && stripos($haystack, $n) === 0){
+			return true;
+		}
+	}
+	
+	return false;
+}
+
+
 function is_html($content_type){
 	return clean_content_type($content_type) == 'text/html';
 }
