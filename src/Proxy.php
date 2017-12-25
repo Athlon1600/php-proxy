@@ -2,20 +2,15 @@
 
 namespace Proxy;
 
-use Symfony\Component\EventDispatcher\EventSubscriberInterface;
-use Symfony\Component\EventDispatcher\EventDispatcher;
-use Symfony\Component\EventDispatcher\Event;
-use Symfony\Component\EventDispatcher\GenericEvent;
-
-use Proxy\Config;
 use Proxy\Event\ProxyEvent;
 use Proxy\Http\Request;
 use Proxy\Http\Response;
+use Proxy\Config;
 
 class Proxy {
-
-	// proxy version!
-	const VERSION = '5.0.1';
+	
+	// Proxy script version
+	const VERSION = '5.1.0';
 	
 	private $dispatcher;
 	
@@ -28,7 +23,7 @@ class Proxy {
 	private $status_found = false;
 	
 	public function __construct(){
-		$this->dispatcher = new EventDispatcher();
+		// do nothing for now
 	}
 	
 	public function setOutputBuffering($output_buffering){
@@ -36,7 +31,6 @@ class Proxy {
 	}
 	
 	private function header_callback($ch, $headers){
-
 		$parts = explode(":", $headers, 2);
 		
 		// extract status code
@@ -60,7 +54,7 @@ class Proxy {
 			$event = new ProxyEvent(array('request' => $this->request, 'response' => $this->response, 'proxy' => &$this));
 			
 			// this is the end of headers - last line is always empty - notify the dispatcher about this
-			$this->dispatcher->dispatch('request.sent', $event);
+			$this->dispatch('request.sent', $event);
 		}
 		
 		return strlen($headers);
@@ -70,7 +64,7 @@ class Proxy {
 	
 		$len = strlen($str);
 		
-		$this->dispatcher->dispatch('curl.callback.write', new ProxyEvent(array(
+		$this->dispatch('curl.callback.write', new ProxyEvent(array(
 			'request' => $this->request,
 			'data' => $str
 		)));
@@ -83,8 +77,34 @@ class Proxy {
 		return $len;
 	}
 	
-	public function getEventDispatcher(){
-		return $this->dispatcher;
+	// TODO: move this all into its own Dispatcher class?
+	// https://github.com/guzzle/guzzle/blob/5.3/src/Event/Emitter.php
+	// https://github.com/laravel/framework/blob/5.0/src/Illuminate/Events/Dispatcher.php#L72
+	private $listeners = array();
+	
+	public function addListener($event, $callback, $priority = 0){
+		$this->listeners[$event][$priority][] = $callback;
+	}
+	
+	public function addSubscriber($subscriber){
+		if(method_exists($subscriber, 'subscribe')){
+			$subscriber->subscribe($this);
+		}
+	}
+	
+	private function dispatch($event_name, $event){
+		
+		if(isset($this->listeners[$event_name])){
+			$temp = (array)$this->listeners[$event_name];
+			
+			foreach($temp as $priority => $listeners){
+				foreach( (array)$listeners as $listener){
+					if(is_callable($listener) ){
+						$listener($event);
+					}
+				}
+			}
+		}
 	}
 	
 	public function forward(Request $request, $url){
@@ -122,11 +142,13 @@ class Proxy {
 		$options[CURLOPT_WRITEFUNCTION] = array($this, 'write_callback');
 		
 		// Notify any listeners that the request is ready to be sent, and this is your last chance to make any modifications.
-		$this->dispatcher->dispatch('request.before_send', new ProxyEvent(array('request' => $this->request, 'response' => $this->response)));
+		$this->dispatch('request.before_send', new ProxyEvent(array(
+			'request' => $this->request,
+			'response' => $this->response
+		)));
 		
 		// We may not even need to send this request if response is already available somewhere (CachePlugin)
 		if($this->request->params->has('request.complete')){
-			
 			// do nothing?
 		} else {
 		
@@ -146,9 +168,7 @@ class Proxy {
 			
 			// there must have been an error if at this point
 			if(!$result){
-					
 				$error = sprintf('(%d) %s', curl_errno($ch), curl_error($ch));
-			
 				throw new \Exception($error);
 			}
 			
@@ -159,7 +179,10 @@ class Proxy {
 			$this->output_buffer = null;
 		}
 		
-		$this->dispatcher->dispatch('request.complete', new ProxyEvent(array('request' => $this->request, 'response' => $this->response)));
+		$this->dispatch('request.complete', new ProxyEvent(array(
+			'request' => $this->request,
+			'response' => $this->response
+		)));
 		
 		return $this->response;
 	}

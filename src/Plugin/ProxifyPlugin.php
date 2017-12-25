@@ -12,10 +12,9 @@ class ProxifyPlugin extends AbstractPlugin {
 	private $base_url = '';
 	
 	private function css_url($matches){
-	
-		$url = trim($matches[1]);
 		
-		if(stripos($url, 'data:') === 0){
+		$url = trim($matches[1]);
+		if(starts_with($url, 'data:')){
 			return $matches[0];
 		}
 		
@@ -33,7 +32,8 @@ class ProxifyPlugin extends AbstractPlugin {
 		// could be empty?
 		$url = trim($matches[2]);
 		
-		if(stripos($url, 'data:') === 0 || stripos($url, 'magnet:') === 0 || stripos($url, 'about:') === 0 || stripos($url, 'javascript:') === 0 || stripos($url, 'mailto:') === 0 || stripos($url, 'tel:') === 0 || stripos($url, 'ios-app:') === 0 || stripos($url, 'android-app:') === 0){
+		$schemes = array('data:', 'magnet:', 'about:', 'javascript:', 'mailto:', 'tel:', 'ios-app:', 'android-app:');
+		if(starts_with($url, $schemes)){
 			return $matches[0];
 		}
 		
@@ -101,7 +101,7 @@ class ProxifyPlugin extends AbstractPlugin {
 	
 	// <title>, <base>, <link>, <style>, <meta>, <script>, <noscript>
 	private function proxify_head($str){
-
+		
 		// let's replace page titles with something custom
 		if(Config::get('replace_title')){
 			$str = preg_replace('/<title[^>]*>(.*?)<\/title>/is', '<title>'.Config::get('replace_title').'</title>', $str);
@@ -137,9 +137,10 @@ class ProxifyPlugin extends AbstractPlugin {
 	}
 	
 	public function onCompleted(ProxyEvent $event){
-	
+		
 		// to be used when proxifying all the relative links
 		$this->base_url = $event['request']->getUri();
+		$url_host = parse_url($this->base_url, PHP_URL_HOST);
 		
 		$response = $event['response'];
 		$content_type = $response->headers->get('content-type');
@@ -147,19 +148,16 @@ class ProxifyPlugin extends AbstractPlugin {
 		$str = $response->getContent();
 		
 		// DO NOT do any proxification on .js files and text/plain content type
-		if($content_type == 'text/javascript' || $content_type == 'application/javascript' || $content_type == 'application/x-javascript' || $content_type == 'text/plain'){
+		$no_proxify = array('text/javascript', 'application/javascript', 'application/x-javascript', 'text/plain');
+		if(in_array($content_type, $no_proxify)){
 			return;
 		}
 		
 		// remove JS from urls
-		$js_remove = Config::get('js_remove');
-		if(is_array($js_remove)){
-			$domain = parse_url($this->base_url, PHP_URL_HOST);
-			
-			foreach($js_remove as $pattern){
-				if(strpos($domain, $pattern) !== false){
-					$str = Html::remove_scripts($str);
-				}
+		$js_remove = (array)Config::get('js_remove');
+		foreach($js_remove as $pattern){
+			if(strpos($url_host, $pattern) !== false){
+				$str = Html::remove_scripts($str);
 			}
 		}
 		

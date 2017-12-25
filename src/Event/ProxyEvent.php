@@ -2,11 +2,7 @@
 
 namespace Proxy\Event;
 
-use Symfony\Component\EventDispatcher\Event;
-
-// http://symfony.com/doc/current/components/event_dispatcher/generic_event.html
-class ProxyEvent extends Event implements \ArrayAccess {
-
+class ProxyEvent implements \ArrayAccess {
 	private $data;
 	
 	public function __construct($data = array()){

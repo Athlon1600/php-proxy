@@ -17,6 +17,10 @@ function starts_with($haystack, $needles){
 	return false;
 }
 
+function str_before($subject, $search){
+	return $search === '' ? $subject : explode($search, $subject)[0];
+}
+
 
 function is_html($content_type){
 	return clean_content_type($content_type) == 'text/html';
