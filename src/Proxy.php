@@ -82,6 +82,11 @@ class Proxy {
 	// https://github.com/laravel/framework/blob/5.0/src/Illuminate/Events/Dispatcher.php#L72
 	private $listeners = array();
 	
+	// Proxy instance itself acts as a dispatcher!
+	public function getEventDispatcher(){
+		return $this;
+	}
+	
 	public function addListener($event, $callback, $priority = 0){
 		$this->listeners[$event][$priority][] = $callback;
 	}
