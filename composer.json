@@ -5,7 +5,7 @@
 	"license": "MIT",
 	"homepage": "https://www.php-proxy.com/",
 	"require": {
-		"ext-curl": "*",
+		"ext-curl": "*"
 	},
 	"suggest": {
 		"predis/predis": "For caching purposes"
