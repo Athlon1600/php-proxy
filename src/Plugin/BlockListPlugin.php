@@ -27,6 +27,16 @@ class BlockListPlugin extends AbstractPlugin {
 			return;
 		}
 		
+		// url filter!
+		$url_block = (array)Config::get('blocklist.url_block');
+		foreach($url_block as $ub){
+			
+			if(strpos($url, $ub) !== false){
+				throw new \Exception("Error: Access to {$url} has been blocked!");
+				return;
+			}
+		}
+		
 		/*
 		1. Wildcard format:     1.2.3.*
 		2. CIDR format:         1.2.3/24  OR  1.2.3.4/255.255.255.0
