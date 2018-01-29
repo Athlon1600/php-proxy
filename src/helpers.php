@@ -85,7 +85,7 @@ function str_rot_pass($str, $key, $decrypt = false){
 }
 
 function app_url(){
-	return (!empty($_SERVER['HTTPS'])&& $_SERVER['HTTPS']=="on" ? 'https://' : 'http://').$_SERVER['HTTP_HOST'].$_SERVER['PHP_SELF'];
+    return (!empty($_SERVER['HTTPS'])&& $_SERVER['HTTPS']=="on" ? 'https://' : 'http://').$_SERVER['HTTP_HOST'].$_SERVER['PHP_SELF'];
 }
 
 function render_string($str, $vars = array()){
