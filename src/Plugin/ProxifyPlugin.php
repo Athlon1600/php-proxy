@@ -5,7 +5,6 @@ namespace Proxy\Plugin;
 use Proxy\Plugin\AbstractPlugin;
 use Proxy\Event\ProxyEvent;
 use Proxy\Config;
-use Proxy\Html;
 
 class ProxifyPlugin extends AbstractPlugin {
 
@@ -152,16 +151,6 @@ class ProxifyPlugin extends AbstractPlugin {
 		if(in_array($content_type, $no_proxify)){
 			return;
 		}
-		
-		// remove JS from urls
-		$js_remove = (array)Config::get('js_remove');
-		foreach($js_remove as $pattern){
-			if(strpos($url_host, $pattern) !== false){
-				$str = Html::remove_scripts($str);
-			}
-		}
-		
-		// add html.no-js
 		
 		// let's remove all frames?? does not protect against the frames created dynamically via javascript
 		$str = preg_replace('@<iframe[^>]*>[^<]*<\\/iframe>@is', '', $str);
