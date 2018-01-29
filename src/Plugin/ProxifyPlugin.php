@@ -4,7 +4,6 @@ namespace Proxy\Plugin;
 
 use Proxy\Plugin\AbstractPlugin;
 use Proxy\Event\ProxyEvent;
-use Proxy\Config;
 
 class ProxifyPlugin extends AbstractPlugin {
 
@@ -100,12 +99,6 @@ class ProxifyPlugin extends AbstractPlugin {
 	
 	// <title>, <base>, <link>, <style>, <meta>, <script>, <noscript>
 	private function proxify_head($str){
-		
-		// let's replace page titles with something custom
-		if(Config::get('replace_title')){
-			$str = preg_replace('/<title[^>]*>(.*?)<\/title>/is', '<title>'.Config::get('replace_title').'</title>', $str);
-		}
-		
 		
 		// base - update base_url contained in href - remove <base> tag entirely
 		//$str = preg_replace_callback('/<base[^>]*href=
