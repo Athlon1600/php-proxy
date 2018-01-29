@@ -1,184 +1,82 @@
 <?php
-
 namespace Proxy\Plugin;
 
 use Proxy\Plugin\AbstractPlugin;
 use Proxy\Event\ProxyEvent;
 
-class ProxifyPlugin extends AbstractPlugin {
+class ProxifyPlugin extends AbstractPlugin
+{
+    private const CONTENT_TYPE_BLACKLIST = ['image', 'font', 'application/javascript', 'application/x-javascript', 'text/javascript', 'text/plain'];
+    private const LINK_TYPE_BLACKLIST = ['data:', 'magnet:', 'about:', 'javascript:', 'mailto:', 'tel:', 'ios-app:', 'android-app:'];
+    private const CONTENT_PARSERS = [
+        '@\bcontent=(?<quote>\'|")\d+\s*;\s*url=(?<url>.*?)\k<quote>@is' => 'self::proxifyUrlCallback',           // content="X;url=<url>" (meta-refresh)
+        '@\b(?:src|href)\s*=\s*(?<quote>\'|")(?<url>.*?)\k<quote>@is' => 'self::proxifyUrlCallback',              // src="<url>" & href="<url>"
+        '@[^a-z]{1}url\s*\((?<delim>\'|"|)(?<url>[^\)]*)\k<delim>\)@im' => 'self::proxifyUrlCallback',            // url(<url>)
+        '@\@import\s+(?<quote>\'|")(?<url>.*?)\k<quote>@im' => 'self::proxifyUrlCallback',                        // @import '<url>'
+        '@\b(?:srcset)\s*=\s*(?<quote>\'|")(?<value>.*?)\k<quote>@im' => 'self::proxifySrcsetAttributeCallback',  // srcset="<url> xxx, …"
+        '@<\s*form[^>]*action=(?<quote>\'|")(?<url>.*?)\k<quote>[^>]*>@im' => 'self::proxifyFormCallback',        // <form action="<url>" …>
+    ];
 
-	private $base_url = '';
-	
-	private function css_url($matches){
-		
-		$url = trim($matches[1]);
-		if(starts_with($url, 'data:')){
-			return $matches[0];
-		}
-		
-		return str_replace($matches[1], proxify_url($matches[1], $this->base_url), $matches[0]);
-	}
-	
-	// this.params.logoImg&&(e="background-image: url("+this.params.logoImg+")")
-	private function css_import($matches){
-		return str_replace($matches[2], proxify_url($matches[2], $this->base_url), $matches[0]);
-	}
+    private $base_url = '';
 
-	// replace src= and href=
-	private function html_attr($matches){
-		
-		// could be empty?
-		$url = trim($matches[2]);
-		
-		$schemes = array('data:', 'magnet:', 'about:', 'javascript:', 'mailto:', 'tel:', 'ios-app:', 'android-app:');
-		if(starts_with($url, $schemes)){
-			return $matches[0];
-		}
-		
-		return str_replace($url, proxify_url($url, $this->base_url), $matches[0]);
-	}
+    public function onCompleted(ProxyEvent $event)
+    {
+        $response = $event['response'];
+        $content_type = $response->headers->get('content-type');
+        if (starts_with($content_type, self::CONTENT_TYPE_BLACKLIST)) {
+            return;
+        }
 
-	private function form_action($matches){
-		
-		// sometimes form action is empty - which means a postback to the current page
-		// $matches[1] holds single or double quote - whichever was used by webmaster
-		
-		// $matches[2] holds form submit URL - can be empty which in that case should be replaced with current URL
-		if(!$matches[2]){
-			$matches[2] = $this->base_url;
-		}
-		
-		$new_action = proxify_url($matches[2], $this->base_url);
-		
-		// what is form method?
-		$form_post = preg_match('@method=(["\'])post\1@i', $matches[0]) == 1;
-		
-		// take entire form string - find real url and replace it with proxified url
-		$result = str_replace($matches[2], $new_action, $matches[0]);
-		
-		// must be converted to POST otherwise GET form would just start appending name=value pairs to your proxy url
-		if(!$form_post){
-		
-			// may throw Duplicate Attribute warning but only first method matters
-			$result = str_replace("<form", '<form method="POST"', $result);
-			
-			// got the idea from Glype - insert this input field to notify proxy later that this form must be converted to GET during http
-			$result .= '<input type="hidden" name="convertGET" value="1">';
-		}
-		
-		return $result;
-	}
-	
-	public function onBeforeRequest(ProxyEvent $event){
-		
-		$request = $event['request'];
-		
-		// check if one of the POST pairs is convertGET - if so, convert this request to GET
-		if($request->post->has('convertGET')){
-			
-			// we don't need this parameter anymore
-			$request->post->remove('convertGET');
-			
-			// replace all GET parameters with POST data
-			$request->get->replace($request->post->all());
-			
-			// remove POST data
-			$request->post->clear();
-			
-			// This is now a GET request
-			$request->setMethod('GET');
-			
-			$request->prepare();
-		}
-	}
-	
-	private function meta_refresh($matches){
-		$url = $matches[2];
-		return str_replace($url, proxify_url($url, $this->base_url), $matches[0]);
-	}
-	
-	// <title>, <base>, <link>, <style>, <meta>, <script>, <noscript>
-	private function proxify_head($str){
-		
-		// base - update base_url contained in href - remove <base> tag entirely
-		//$str = preg_replace_callback('/<base[^>]*href=
-		
-		// link - replace href with proxified
-		// link rel="shortcut icon" - replace or remove
-		
-		// meta - only interested in http-equiv - replace url refresh
-		// <meta http-equiv="refresh" content="5; url=http://example.com/">
-		$str = preg_replace_callback('/content=(["\'])\d+\s*;\s*url=(.*?)\1/is', array($this, 'meta_refresh'), $str);
-		
-		return $str;
-	}
-	
-	// The <body> background attribute is not supported in HTML5. Use CSS instead.
-	private function proxify_css($str){
-		
-		// The HTML5 standard does not require quotes around attribute values.
-		
-		// if {1} is not there then youtube breaks for some reason
-		$str = preg_replace_callback('@[^a-z]{1}url\s*\((?:\'|"|)(.*?)(?:\'|"|)\)@im', array($this, 'css_url'), $str);
-		
-		// https://developer.mozilla.org/en-US/docs/Web/CSS/@import
-		// TODO: what about @import directives that are outside <style>?
-		$str = preg_replace_callback('/@import (\'|")(.*?)\1/i', array($this, 'css_import'), $str);
-		
-		return $str;
-	}
-	
-	public function onCompleted(ProxyEvent $event){
-		
-		// to be used when proxifying all the relative links
-		$this->base_url = $event['request']->getUri();
-		$url_host = parse_url($this->base_url, PHP_URL_HOST);
-		
-		$response = $event['response'];
-		$content_type = $response->headers->get('content-type');
-		
-		$str = $response->getContent();
-		
-		// DO NOT do any proxification on .js files and text/plain content type
-		$no_proxify = array('text/javascript', 'application/javascript', 'application/x-javascript', 'text/plain');
-		if(in_array($content_type, $no_proxify)){
-			return;
-		}
-		
-		// let's remove all frames?? does not protect against the frames created dynamically via javascript
-		$str = preg_replace('@<iframe[^>]*>[^<]*<\\/iframe>@is', '', $str);
-		
-		$str = $this->proxify_head($str);
-		$str = $this->proxify_css($str);
-		
-		// src= and href=
-		$str = preg_replace_callback('@(?:src|href)\s*=\s*(["|\'])(.*?)\1@is', array($this, 'html_attr'), $str);
-		
-		// img srcset
-		$str = preg_replace_callback('/srcset=\"(.*?)\"/i', function($matches){
-			$src = $matches[1];
-			
-			// url_1 1x, url_2 4x, ...
-			$urls = preg_split('/\s*,\s*/', $src);
-			foreach($urls as $part){
-				
-				// TODO: add str_until helper
-				$pos = strpos($part, ' ');
-				if($pos !== false){
-					$url = substr($part, 0, $pos);
-					$src = str_replace($url, proxify_url($url, $this->base_url), $src);
-				}
-			}
-			
-			return 'srcset="'.$src.'"';
-		}, $str);
-		
-		// form
-		$str = preg_replace_callback('@<form[^>]*action=(["\'])(.*?)\1[^>]*>@i', array($this, 'form_action'), $str);
-		
-		$response->setContent($str);
-	}
+        // to be used when proxifying all the relative links
+        $this->base_url = $event['request']->getUri();
+        $proxified_content = preg_replace_callback_array(self::CONTENT_PARSERS, $response->getContent());
+        $response->setContent($proxified_content);
+    }
 
+    public function onBeforeRequest(ProxyEvent $event)
+    {
+        $request = $event['request'];
+        $this->convertPostToGet($request);
+    }
+
+    private function convertPostToGet($request)
+    {
+        if (!$request->post->has('convertGET')) {
+            return;
+        }
+
+        $request->get->replace($request->post->all()); // Change POST data to GET data
+        $request->post->clear();                       // Remove POST data
+        $request->setMethod('GET');                    // This is now a GET request
+        $request->prepare();
+    }
+
+    private function proxifyFormCallback($matches)
+    {
+        $full_capture = $this->proxifyUrlCallback($matches);
+
+        // If the form method is not post, inject method="post" and add a hidden input field called "convertGET"
+        $full_capture = preg_replace('@(<\s*form\s*)((?:(?!method=(\'|")post\3)[^>])*>)@i', '$1 method="post" $2<input type="hidden" name="convertGET" value="1">', $full_capture);
+        return $full_capture;
+    }
+
+    private function proxifySrcsetAttributeCallback($matches)
+    {
+        $attribute = $matches[0];
+        $value = $matches['value'];
+        $srcset_url_pattern = "@(?:\s*(?<url>[^\s,]*)(?:\s*(?:,|\S*)))@im";
+        $proxified_value = preg_replace_callback($srcset_url_pattern, array($this, 'proxifyUrlCallback'), $value);
+        return str_replace($value, $proxified_value, $attribute);
+    }
+
+    private function proxifyUrlCallback($matches)
+    {
+        $full_capture = $matches[0];
+        if (!($url = $matches['url'] ?? null) || starts_with($url, self::LINK_TYPE_BLACKLIST)) {
+            return $full_capture;
+        }
+
+        $proxified_url = proxify_url($url, $this->base_url);
+        return str_replace($url, $proxified_url, $full_capture);
+    }
 }
-
-?>
