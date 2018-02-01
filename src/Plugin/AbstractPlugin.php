@@ -1,10 +1,21 @@
 <?php
+
 namespace Proxy\Plugin;
 
 use Proxy\Event\ProxyEvent;
 
 abstract class AbstractPlugin
 {
+    private const EVENT_LISTENERS = [
+        'request.before_send' => 'onBeforeRequest',
+        'request.sent' => 'onHeadersReceived',
+        'curl.callback.write' => 'onCurlWrite',
+        'request.complete' => 'onCompleted',
+    ];
+    
+    // apply these methods only to those events whose request URL passes this filter
+    protected $url_pattern;
+
     public function onBeforeRequest(ProxyEvent $event)
     {
         // fired right before a request is being sent to a proxy
@@ -27,15 +38,28 @@ abstract class AbstractPlugin
 
     final public function subscribe($dispatcher)
     {
-        $event_listeners = [
-            'request.before_send' => 'onBeforeRequest',
-            'request.sent' => 'onHeadersReceived',
-            'curl.callback.write' => 'onCurlWrite',
-            'request.complete' => 'onCompleted',
-        ];
-
-        foreach ($event_listeners as $event => $listener) {
-            $dispatcher->addListener($event, [$this, $listener]);
+        foreach (self::EVENT_LISTENERS as $event_name => $listener) {
+            $dispatcher->addListener($event_name, function ($event) use ($event_name) {
+                $this->route($event_name, $event);
+            });
         }
+    }
+
+    // dispatch based on filter
+    final private function route($event_name, ProxyEvent $event)
+    {
+        $url = $event['request']->getUri();
+
+        // url filter provided and current request url does not match it
+        if ($this->url_pattern) {
+            if (starts_with($this->url_pattern, '/') && preg_match($this->url_pattern, $url) !== 1) {
+                return;
+            } else if (stripos($url, $this->url_pattern) === false) {
+                return;
+            }
+        }
+
+        // Call the handler for this event
+        [$this, self::EVENT_LISTENERS[$event_name]]($event);
     }
 }
