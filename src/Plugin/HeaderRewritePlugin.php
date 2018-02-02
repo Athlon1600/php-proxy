@@ -4,6 +4,7 @@ namespace Proxy\Plugin;
 
 use Proxy\Plugin\AbstractPlugin;
 use Proxy\Event\ProxyEvent;
+use Proxy\Config;
 
 class HeaderRewritePlugin extends AbstractPlugin {
 
@@ -40,7 +41,7 @@ class HeaderRewritePlugin extends AbstractPlugin {
 		
 		// we need content-encoding (in case server refuses to serve it in plain text)
 		// content-length: final size of content sent to user may change via plugins, so it makes no sense to send old content-length
-		$forward_headers = array('content-type', 'zzzcontent-length', 'accept-ranges', 'content-range', 'content-disposition', 'location', 'set-cookie');
+        $forward_headers = array('cache-control', 'content-type', 'zzzcontent-length', 'accept-ranges', 'content-range', 'content-disposition', 'location', 'set-cookie');
 		
 		foreach($response->headers->all() as $name => $value){
 			
@@ -57,13 +58,14 @@ class HeaderRewritePlugin extends AbstractPlugin {
 			
 			$response->headers->set('Content-Disposition', 'filename="'.$filename.'"');
 		}
-		
-		// do not ever cache our proxy pages!
-		$response->headers->set("cache-control", "no-cache, no-store, must-revalidate");
-		$response->headers->set("pragma", "no-cache");
-		$response->headers->set("expires", 0);
+
+        if (!Config::get('allow_client_caching')) {
+            // do not ever cache our proxy pages!
+            $response->headers->set("cache-control", "no-cache, no-store, must-revalidate");
+            $response->headers->set("pragma", "no-cache");
+            $response->headers->set("expires", 0);
+        }
 	}
-	
 }
 
 ?>
