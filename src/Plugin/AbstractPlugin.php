@@ -6,7 +6,7 @@ use Proxy\Event\ProxyEvent;
 
 abstract class AbstractPlugin
 {
-    private const EVENT_LISTENERS = [
+    const EVENT_LISTENERS = [
         'request.before_send' => 'onBeforeRequest',
         'request.sent' => 'onHeadersReceived',
         'curl.callback.write' => 'onCurlWrite',

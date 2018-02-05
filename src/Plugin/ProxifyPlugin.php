@@ -6,9 +6,9 @@ use Proxy\Event\ProxyEvent;
 
 class ProxifyPlugin extends AbstractPlugin
 {
-    private const CONTENT_TYPE_BLACKLIST = ['image', 'font', 'application/javascript', 'application/x-javascript', 'text/javascript', 'text/plain'];
-    private const LINK_TYPE_BLACKLIST = ['data:', 'magnet:', 'about:', 'javascript:', 'mailto:', 'tel:', 'ios-app:', 'android-app:'];
-    private const CONTENT_PARSERS = [
+    const CONTENT_TYPE_BLACKLIST = ['image', 'font', 'application/javascript', 'application/x-javascript', 'text/javascript', 'text/plain'];
+    const LINK_TYPE_BLACKLIST = ['data:', 'magnet:', 'about:', 'javascript:', 'mailto:', 'tel:', 'ios-app:', 'android-app:'];
+    const CONTENT_PARSERS = [
         '@\bcontent=(?<quote>\'|")\d+\s*;\s*url=(?<url>.*?)\k<quote>@is' => 'self::proxifyUrlCallback',           // content="X;url=<url>" (meta-refresh)
         '@\b(?:src|href)\s*=\s*(?<quote>\'|")(?<url>.*?)\k<quote>@is' => 'self::proxifyUrlCallback',              // src="<url>" & href="<url>"
         '@[^a-z]{1}url\s*\((?<delim>\'|"|)(?<url>[^\)]*)\k<delim>\)@im' => 'self::proxifyUrlCallback',            // url(<url>)
