@@ -231,8 +231,16 @@ class Request {
 		$body = '';
 		
 		foreach($fields as $name => $value){
-			$body .= sprintf($part_field, $boundary, $name, $value);
-			$body .= "{$value}\r\n";
+			//checkboxes can have multiple values in an array.
+			if(is_array($value)){
+				foreach($value as $v){
+					$body .= sprintf($part_field, $boundary, "{$name}[]", $v);
+					$body .= "{$v}\r\n";
+				}
+			} else {
+				$body .= sprintf($part_field, $boundary, $name, $value);
+				$body .= "{$value}\r\n";
+			}
 		}
 		
 		// data better have [name, tmp_name, and optional type]
