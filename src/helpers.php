@@ -85,7 +85,10 @@ function str_rot_pass($str, $key, $decrypt = false){
 }
 
 function app_url(){
-	return (!empty($_SERVER['HTTPS']) ? 'https://' : 'http://').$_SERVER['HTTP_HOST'].$_SERVER['PHP_SELF'];
+	if (is_client_using_ssl()) {
+		return 'https://'.$_SERVER['HTTP_HOST'].$_SERVER['PHP_SELF'];
+	}
+	return 'http://'.$_SERVER['HTTP_HOST'].$_SERVER['PHP_SELF'];
 }
 
 function render_string($str, $vars = array()){
@@ -119,10 +122,35 @@ function render_template($file_path, $vars = array()){
 	return $contents;
 }
 
+function is_client_using_ssl(){
+	if ((!empty($_SERVER['HTTPS']) && strtolower($_SERVER['HTTPS']) != 'off') || $_SERVER['SERVER_PORT'] == '443') {
+		return true;
+	}
+	if (!empty($_SERVER['HTTP_X_FORWARDED_PROTO']) && (strtolower($_SERVER['HTTP_X_FORWARDED_PROTO']) == 'https')) {
+		return true;
+	}
+	if (!empty($_SERVER['HTTP_X_FORWARDED_PROTOCOL']) && (strtolower($_SERVER['HTTP_X_FORWARDED_PROTOCOL']) == 'https')) {
+		return true;
+	}
+	if (!empty($_SERVER['HTTP_X_FORWARDED_SSL']) && (strtolower($_SERVER['HTTP_X_FORWARDED_SSL']) == 'on')) {
+		return true;
+	}
+	if (!empty($_SERVER['HTTP_X_URL_SCHEME']) && (strtolower($_SERVER['HTTP_X_URL_SCHEME']) == 'https')) {
+		return true;
+	}
+	if (!empty($_SERVER['HTTP_FRONT_END_HTTPS']) && (strtolower($_SERVER['HTTP_FRONT_END_HTTPS']) == 'on')) {
+		return true;
+	}
+	if (!empty($_SERVER['FRONT-END-HTTPS']) && (strtolower($_SERVER['FRONT-END-HTTPS']) == 'on')) {
+		return true;
+	}
+	return false;
+}
+
 function add_http($url){
 
 	if(!preg_match('#^https?://#i', $url)){
-		if (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] != 'off') {
+		if (is_client_using_ssl()) {
 			$url = 'https://' . $url;
 		} else {
 			$url = 'http://' . $url;
