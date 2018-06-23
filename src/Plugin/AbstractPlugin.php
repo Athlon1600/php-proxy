@@ -47,12 +47,15 @@ abstract class AbstractPlugin {
 	// dispatch based on filter
 	final private function route($event_name, ProxyEvent $event){
 		$url = $event['request']->getUri();
+		$url_host = parse_url($url, PHP_URL_HOST);
 		
 		// url filter provided and current request url does not match it
 		if($this->url_pattern){
-			if(starts_with($this->url_pattern, '/') && preg_match($this->url_pattern, $url) !== 1){
-				return;
-			} else if(stripos($url, $this->url_pattern) === false){
+			if(starts_with($this->url_pattern, '/')){
+				if(preg_match($this->url_pattern, $url_host) !== 1){
+					return;
+				}
+			} else if(stripos($url_host, $this->url_pattern) === false){
 				return;
 			}
 		}
