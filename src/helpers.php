@@ -85,6 +85,10 @@ function str_rot_pass($str, $key, $decrypt = false){
 }
 
 function app_url(){
+	
+	//when using framework that have pretty urls you don't want to end up having index.php at the end..
+	if(Config::get('app_url')) return Config::get('app_url');
+	
 	return (!empty($_SERVER['HTTPS']) ? 'https://' : 'http://').$_SERVER['HTTP_HOST'].$_SERVER['PHP_SELF'];
 }
 
@@ -175,7 +179,10 @@ function proxify_url($url, $base_url = ''){
 		$url = rel2abs($url, $base_url);
 	}
 	
-	return app_url().'?q='.url_encrypt($url);
+	//In some modern frameworks you may want to use pretty urls. This should help.
+	$sep = Config::get('query_sep') ? Config::get('query_sep') : "?q=";
+	
+	return app_url().$sep.url_encrypt($url);
 }
 
 function rel2abs($rel, $base)
