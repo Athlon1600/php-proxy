@@ -135,7 +135,10 @@ class Proxy {
 			
 			// we will take care of redirects
 			CURLOPT_FOLLOWLOCATION	=> false,
-			CURLOPT_AUTOREFERER		=> false
+			CURLOPT_AUTOREFERER		=> false,
+			
+			CURLOPT_PROTOCOLS => CURLPROTO_HTTP | CURLPROTO_HTTPS,
+			CURLOPT_REDIR_PROTOCOLS => CURLPROTO_HTTP | CURLPROTO_HTTPS
 		);
 		
 		// this is probably a good place to add custom curl options that way other critical options below would overwrite that
