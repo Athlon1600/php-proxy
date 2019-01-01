@@ -147,6 +147,11 @@ class ProxifyPlugin extends AbstractPlugin {
 		
 		$str = $response->getContent();
 		
+		// DO NOT do any proxification if $event['donotproxify'] = true;
+		// Useful if on a plugin I do not want to proxify the urls within $event['response']->setContent($output);
+		// Because on $output I have inserted custom urls 
+		if($event['donotproxify']) return;
+		
 		// DO NOT do any proxification on .js files and text/plain content type
 		$no_proxify = array('text/javascript', 'application/javascript', 'application/x-javascript', 'text/plain');
 		if(in_array($content_type, $no_proxify)){
