@@ -143,7 +143,7 @@ class ProxifyPlugin extends AbstractPlugin {
 		$url_host = parse_url($this->base_url, PHP_URL_HOST);
 		
 		$response = $event['response'];
-		$content_type = $response->headers->get('content-type');
+		$content_type = explode(';', $response->headers->get('content-type'), 2)[0];
 		
 		$str = $response->getContent();
 		
