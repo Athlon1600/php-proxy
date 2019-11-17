@@ -17,5 +17,13 @@
 		"files": [
 			"src/helpers.php"
 		]
+	},
+	"autoload-dev": {
+		"psr-4": {
+			"Proxy\\Tests\\": "tests/"
+		}
+	},
+	"require-dev": {
+		"phpunit/phpunit": "7"
 	}
 }
