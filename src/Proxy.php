@@ -10,7 +10,7 @@ use Proxy\Config;
 class Proxy {
 	
 	// Proxy script version
-	const VERSION = '5.1.0';
+	const VERSION = '5.2.0';
 	
 	private $dispatcher;
 	
@@ -35,7 +35,7 @@ class Proxy {
 		
 		// extract status code
 		// if using proxy - we ignore this header: HTTP/1.1 200 Connection established
-		if(preg_match('/HTTP\/1.\d+ (\d+)/', $headers, $matches) && stripos($headers, '200 Connection established') === false){
+		if(preg_match('/HTTP\/[\d.]+\s*(\d+)/', $headers, $matches) && stripos($headers, '200 Connection established') === false){
 			
 			$this->response->setStatusCode($matches[1]);
 			$this->status_found = true;
