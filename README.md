@@ -1,3 +1,9 @@
+<center>
+
+![](https://img.shields.io/packagist/dm/athlon1600/php-proxy) ![](https://img.shields.io/github/last-commit/athlon1600/php-proxy)
+
+</center>
+
 php-proxy
 =========
 
