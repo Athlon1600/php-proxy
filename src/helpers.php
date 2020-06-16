@@ -173,6 +173,8 @@ function url_decrypt($url, $key = false){
 // www.youtube.com TO proxy-app.com/index.php?q=encrypt_url(www.youtube.com)
 function proxify_url($url, $base_url = ''){
 	
+	if(empty($url))return '';
+	
 	$url = htmlspecialchars_decode($url);
 	
 	if($base_url){
