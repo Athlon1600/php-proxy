@@ -1,5 +1,5 @@
 <?php
-
+imclude proxy.php;
 namespace Proxy\Plugin;
 
 use Proxy\Plugin\AbstractPlugin;
