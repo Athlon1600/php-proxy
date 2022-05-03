@@ -17,7 +17,7 @@ If you're looking for a **project** version of this script that functions as a W
 [**php-proxy-app**](https://github.com/Athlon1600/php-proxy-app)
 
 See this php-proxy in action:
-<a href="https://unblockvideos.com/" target="_blank">UnblockVideos.com</a>
+<a href="https://proxy.unblockvideos.com/" target="_blank">proxy.unblockvideos.com</a>
 
 Installation
 -------
