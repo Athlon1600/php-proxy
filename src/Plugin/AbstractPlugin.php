@@ -45,7 +45,7 @@ abstract class AbstractPlugin {
 	}
 	
 	// dispatch based on filter
-	final private function route($event_name, ProxyEvent $event){
+	private function route($event_name, ProxyEvent $event){
 		$url = $event['request']->getUri();
 		
 		// url filter provided and current request url does not match it
