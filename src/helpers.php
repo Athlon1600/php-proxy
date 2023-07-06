@@ -2,11 +2,16 @@
 
 use Proxy\Config;
 
-// strip away extra parameters text/html; charset=UTF-8
-function clean_content_type($content_type){
-	return trim(preg_replace('@;.*@', '', $content_type));
+/**
+ * Strip away extra parameters "text/html; charset=UTF-8"
+ * @param $content_type
+ * @return string
+ */
+function clean_content_type($content_type)
+{
+    $content_type = (is_array($content_type) && count($content_type) > 0) ? $content_type[0] : $content_type;
+    return trim(preg_replace('@;.*@', '', $content_type));
 }
-
 
 if(!function_exists('starts_with')){
 	
