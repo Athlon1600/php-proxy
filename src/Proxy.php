@@ -46,7 +46,7 @@ class Proxy {
 			$value = trim($parts[1]);
 			
 			// this must be a header: value line
-			$this->response->headers->set($name, $value, false);
+			$this->response->headers->set($name, $value, true);
 			
 		} else if($this->status_found){
 		
