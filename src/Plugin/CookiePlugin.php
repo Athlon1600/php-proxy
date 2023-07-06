@@ -40,7 +40,7 @@ class CookiePlugin extends AbstractPlugin {
 				
 				// does this cookie belong to this domain?
 				// sometimes domain begins with a DOT indicating all subdomains - deprecated but still in use on some servers...
-				if(strpos($host, $cookie_domain) !== false){
+				if(!empty($host) && strpos($host, $cookie_domain) !== false){
 					$send_cookies[] = $cookie_name.'='.$cookie_value;
 				}
 			}
